@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "ggdsvVh+BnI=",
+  "success": true,
+  "projectFilePath": "/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/EcoMealApp.csproj",
+  "expectedPackageFiles": [
+    "/Users/hegedusrazvan/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.9/microsoft.aspnetcore.app.internal.assets.10.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

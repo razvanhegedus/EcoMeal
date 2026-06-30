@@ -1,0 +1,83 @@
+﻿@page "/weather"
+@attribute [StreamRendering]
+
+
+<PageTitle>Weather</PageTitle>
+
+<h1>Weather</h1>
+
+<p>This component demonstrates showing data.</p>
+
+@if (restaurants == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div class="card__container">
+        @foreach (var restaurant in restaurants)
+        {
+            <div class="card" style="width: 200px; height: 200px">
+                <img src="@restaurant.ImageUrl" alt="@restaurant.Name" style="width:100%; height: 70%">
+        
+                <div class="container">
+                    <h4><b>@restaurant.Name</b></h4>
+                    <p>@restaurant.Category</p>
+                </div>
+            </div>
+        }
+    </div>
+    
+}
+
+@code {
+    private Restaurant[]? restaurants;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(500);
+
+        restaurants = new[]
+        {
+            new Restaurant 
+            { 
+                Name = "McDonalds", 
+                Category = "Food Services", 
+                ImageUrl = "mac.png" 
+            },
+            new Restaurant 
+            { 
+                Name = "Burger King", 
+                Category = "Food Services", 
+                ImageUrl = "bgk.png" 
+            },
+            new Restaurant 
+            { 
+                Name = "Burger King", 
+                Category = "Food Services", 
+                ImageUrl = "bgk.png" 
+            },
+            new Restaurant
+            {
+                Name = "Burger King",
+                Category = "Food Services",
+                ImageUrl = "bgk.png"
+            },
+            new Restaurant 
+            { 
+                Name = "McDonalds", 
+                Category = "Food Services", 
+                ImageUrl = "mac.png" 
+            }
+        };
+    }
+
+    private class Restaurant
+    {
+        public string? Name { get; set; }
+        public string? Category { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+}
