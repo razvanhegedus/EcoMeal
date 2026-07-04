@@ -1,10 +1,8 @@
 ﻿@page "/weather"
-@attribute [StreamRendering]
+@rendermode InteractiveServer
+<PageTitle>Restaurant</PageTitle>
 
-
-<PageTitle>Weather</PageTitle>
-
-<h1>Weather</h1>
+<h1>Restaurant</h1>
 
 <p>This component demonstrates showing data.</p>
 
@@ -16,24 +14,41 @@
 }
 else
 {
-    <div class="card__container">
+    <div class="card__container" style="display: flex; gap: 1rem; flex-wrap: wrap;">
         @foreach (var restaurant in restaurants)
         {
-            <div class="card" style="width: 200px; height: 200px">
-                <img src="@restaurant.ImageUrl" alt="@restaurant.Name" style="width:100%; height: 70%">
+            <div class="card" style="width: 200px; height: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+                <img src="@restaurant.ImageUrl" alt="@restaurant.Name" style="width:100%; height: 120px; object-fit: cover;">
         
-                <div class="container">
+                <div class="container" style="text-align: center; margin-top: 10px;">
                     <h4><b>@restaurant.Name</b></h4>
                     <p>@restaurant.Category</p>
+                    
+                    <button class="btn btn-primary" @onclick="() => ShowDetails(restaurant)" style="margin-top: 5px;">View Details</button>
                 </div>
             </div>
         }
     </div>
     
+    @if (selectedRestaurant != null)
+    {
+        <div id="fade" class="black_overlay" @onclick="CloseDetails"></div>
+        
+        <div id="light" class="white_content">
+            <h2>@selectedRestaurant.Name</h2>
+            <p><strong>Category:</strong> @selectedRestaurant.Category</p>
+            <img src="@selectedRestaurant.ImageUrl" alt="@selectedRestaurant.Name" style="max-height: 150px;" />
+            
+            <br /><br />
+            <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+        </div>
+    }
 }
+
 
 @code {
     private Restaurant[]? restaurants;
+    private Restaurant? selectedRestaurant; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,37 +56,22 @@ else
 
         restaurants = new[]
         {
-            new Restaurant 
-            { 
-                Name = "McDonalds", 
-                Category = "Food Services", 
-                ImageUrl = "mac.png" 
-            },
-            new Restaurant 
-            { 
-                Name = "Burger King", 
-                Category = "Food Services", 
-                ImageUrl = "bgk.png" 
-            },
-            new Restaurant 
-            { 
-                Name = "Burger King", 
-                Category = "Food Services", 
-                ImageUrl = "bgk.png" 
-            },
-            new Restaurant
-            {
-                Name = "Burger King",
-                Category = "Food Services",
-                ImageUrl = "bgk.png"
-            },
-            new Restaurant 
-            { 
-                Name = "McDonalds", 
-                Category = "Food Services", 
-                ImageUrl = "mac.png" 
-            }
+            new Restaurant { Name = "McDonalds", Category = "Food Services", ImageUrl = "mac.png" },
+            new Restaurant { Name = "Burger King", Category = "Food Services", ImageUrl = "bgk.png" },
+            new Restaurant { Name = "Burger King", Category = "Food Services", ImageUrl = "bgk.png" },
+            new Restaurant { Name = "Burger King", Category = "Food Services", ImageUrl = "bgk.png" },
+            new Restaurant { Name = "McDonalds", Category = "Food Services", ImageUrl = "mac.png" }
         };
+    }
+
+    private void ShowDetails(Restaurant restaurant)
+    {
+        selectedRestaurant = restaurant;
+    }
+
+    private void CloseDetails()
+    {
+        selectedRestaurant = null;
     }
 
     private class Restaurant
