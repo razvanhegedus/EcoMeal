@@ -10,11 +10,11 @@ public class Business
 
     public string Address { get; set; }
 
-    public string ImageURL { get; set; }
+    public string? ImageURL { get; set; }
     
     public Guid BusinessTypeID { get; set; }
     
-    public BusinessType BusinessType { get; set; }
+    public BusinessType? BusinessType { get; set; }
 
     public List<Package> Packages { get; set; } = new List<Package>();
 

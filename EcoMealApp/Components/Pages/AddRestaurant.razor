@@ -3,7 +3,7 @@
 
 @using EcoMealApp.Data.Entities
 @using EcoMealApp.Services
-@inject IBusinessService BusinessService
+@inject HttpClient Http
 @inject NavigationManager Navigation
 
 <PageTitle>Add New Restaurant</PageTitle>
@@ -58,12 +58,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        businessTypes = await BusinessService.GetBusinessTypesAsync();
+        businessTypes = await Http.GetFromJsonAsync<List<BusinessType>>("api/businessType");
     }
 
     private async Task HandleValidSubmit()
     {
-        
         if (string.IsNullOrWhiteSpace(newRestaurant.Name))
         {
             errorMessage = "Please type a name."; 
@@ -87,13 +86,24 @@
             errorMessage = "Please type an address."; 
             return;
         }
-        
 
         errorMessage = null;
         newRestaurant.ID = Guid.NewGuid();
         
-        await BusinessService.CreateBusinessAsync(newRestaurant);
-        Navigation.NavigateTo("/weather");
+        var response = await Http.PostAsJsonAsync("api/business", newRestaurant);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/restaurants");
+        }
+        else
+        {
+            // NEW: Read the exact error reason from the API!
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            
+            // Print the API's complaint directly to the screen
+            errorMessage = $"API Error: {errorDetails}";
+        }
     }
 
     private void HandleInvalidSubmit()
@@ -103,6 +113,6 @@
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/weather");
+        Navigation.NavigateTo("/restaurants");
     }
 }

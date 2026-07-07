@@ -13,6 +13,7 @@ builder.Services.AddDbContext<EcoMealDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("EcoMealDb")));
 
 builder.Services.AddScoped<IBusinessService, BusinessService>();
+builder.Services.AddScoped<IBusinessTypeService, BusinessTypeService>();
 
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);

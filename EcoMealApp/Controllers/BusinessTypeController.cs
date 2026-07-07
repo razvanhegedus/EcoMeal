@@ -1,12 +1,22 @@
+using EcoMealApp.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoMealApp.Controllers;
 
-public class BusinessTypeController : Controller
+[Route("api/[controller]")]
+[ApiController]
+public class BusinessTypeController : ControllerBase
 {
-    // GET
-    public IActionResult Index()
+    private readonly IBusinessTypeService _businessTypeService;
+
+    public BusinessTypeController(IBusinessTypeService businessTypeService)
     {
-        return View();
+        _businessTypeService = businessTypeService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTypes()
+    {
+        return Ok(await _businessTypeService.GetBusinessTypesAsync());
     }
 }

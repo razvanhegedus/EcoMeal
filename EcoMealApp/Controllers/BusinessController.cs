@@ -16,9 +16,14 @@ public class BusinessController : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult<List<Business>>> GetBusinesses()
+    public async Task<IActionResult> GetAll()
     {
-        var businesses = await _businessService.GetAllBusinessesAsync();
-        return Ok(businesses);
+        return Ok(await _businessService.GetAllBusinessesAsync());
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Create(Business business)
+    {
+        return Ok(await _businessService.CreateBusinessAsync(business));
     }
 }

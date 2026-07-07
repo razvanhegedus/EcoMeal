@@ -34,8 +34,4 @@ public class BusinessService : IBusinessService
         return newBusiness;
     }
     
-    public async Task<List<BusinessTypeService>> GetBusinessTypesAsync()
-    {
-        return await _context.BusinessTypes.ToListAsync();
-    }
 }

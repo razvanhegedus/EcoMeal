@@ -1,13 +1,13 @@
-﻿@page "/weather"
+﻿@page "/restaurants"
 @rendermode InteractiveServer
 
 @using EcoMealApp.Data.Entities
 @using EcoMealApp.Services
 @inject HttpClient Http
 
-<PageTitle>Restaurant</PageTitle>
+<PageTitle>Restaurants</PageTitle>
 
-<h1>Restaurant</h1>
+<h1>Restaurants</h1>
 
 <a href="/add-restaurant" class="btn btn-success mb-4" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
     + Add New Restaurant
@@ -25,14 +25,20 @@ else
     <div class="card__container" style="display: flex; gap: 1rem; flex-wrap: wrap;">
         @foreach (var restaurant in businesses)
         {
-            <div class="card" style="width: 200px; height: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
-                <img src="@restaurant.ImageURL" alt="@restaurant.Name" style="width:100%; height: 120px; object-fit: cover;">
+            @* 1. Added display: flex and flex-direction: column to the main card *@
+            <div class="card" style="width: 200px; height: 280px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column;">
+                
+                <img src="@(string.IsNullOrEmpty(restaurant.ImageURL) ? "default_restaurant.png" : restaurant.ImageURL)" alt="@restaurant.Name" style="width:100%; height: 120px; object-fit: cover; border-radius: 4px;">
         
-                <div class="container" style="text-align: center; margin-top: 10px;">
-                    <h4><b>@restaurant.Name</b></h4>
-                    <p>@restaurant.BusinessType.Name</p>
+                @* 2. Made the text container a flex column and added flex-grow: 1 *@
+                <div class="container" style="text-align: center; margin-top: 10px; display: flex; flex-direction: column; flex-grow: 1;">
                     
-                    <button class="btn btn-primary" @onclick="() => ShowDetails(restaurant)" style="margin-top: 5px;">View Details</button>
+                    @* To keep things clean, added a smaller font-size and margin-bottom *@
+                    <h4 style="font-size: 1.1rem; margin-bottom: 2px;"><b>@restaurant.Name</b></h4>
+                    <p style="color: #666; font-size: 0.9rem;">@restaurant.BusinessType?.Name</p>
+                    
+                    @* 3. margin-top: auto is the magic trick that pushes the button to the bottom! *@
+                    <button class="btn btn-primary" @onclick="() => ShowDetails(restaurant)" style="margin-top: auto;">View Details</button>
                 </div>
             </div>
         }

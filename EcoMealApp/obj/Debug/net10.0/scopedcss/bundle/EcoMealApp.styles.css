@@ -361,14 +361,14 @@ main[b-yiqvmle1rg] {
         opacity: 0;
     }
 }
-/* /Components/Pages/Weather.razor.rz.scp.css */
-.card__container[b-fkkussvgh4] {
+/* /Components/Pages/Restaurant.razor.rz.scp.css */
+.card__container[b-keqzkt1kzp] {
     display: flex;
     gap: 100px;
     flex-wrap: wrap;
 }
 
-.black_overlay[b-fkkussvgh4] {
+.black_overlay[b-keqzkt1kzp] {
     position: fixed; 
     top: 0%;
     left: 0%;
@@ -379,7 +379,7 @@ main[b-yiqvmle1rg] {
     opacity: 0.80;
 }
 
-.white_content[b-fkkussvgh4] {
+.white_content[b-keqzkt1kzp] {
     position: fixed; 
     top: 25%;
     left: 25%;
