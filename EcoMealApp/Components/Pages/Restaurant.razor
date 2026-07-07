@@ -50,11 +50,35 @@ else
         
         <div id="light" class="white_content">
             <h2>@selectedBusiness.Name</h2>
-            <p><strong>Category:</strong> @selectedBusiness.BusinessType.Name</p>
-            <img src="@selectedBusiness.ImageURL" alt="@selectedBusiness.Name" style="max-height: 150px;" />
+            <p><strong>Category:</strong> @selectedBusiness.BusinessType?.Name</p>
+            <img src="@(string.IsNullOrEmpty(selectedBusiness.ImageURL) ? "default_restaurant.png" : selectedBusiness.ImageURL)" alt="@selectedBusiness.Name" style="max-height: 150px; border-radius: 8px;" />
             
-            <br /><br />
-            <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+            <hr style="margin: 20px 0;" />
+            <h4>Available Packages</h4>
+            
+            @if (isLoadingPackages)
+            {
+                <p><em>Loading packages...</em></p>
+            }
+            else if (modalPackages != null && modalPackages.Any())
+            {
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    @foreach (var package in modalPackages) 
+                    {
+                        <div style="border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;">
+                            <h5 style="margin: 0;">@package.Name</h5>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">@package.Description</p>
+                            <span style="font-weight: bold; color: #28a745;">$@package.Price</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="color: #888; font-style: italic;">No packages currently available.</p>
+            }
+            
+            <button class="btn btn-secondary" style="margin-top: 15px;" @onclick="CloseDetails">Close</button>
         </div>
     }
 }
@@ -63,19 +87,39 @@ else
 @code {
     private List<Business>? businesses;
     private Business? selectedBusiness; 
+    
+    private List<Package>? modalPackages;
+    private bool isLoadingPackages = false;
 
     protected override async Task OnInitializedAsync()
     {
         businesses = await Http.GetFromJsonAsync<List<Business>>("api/business");
     }
 
-    private void ShowDetails(Business business)
+    private async Task ShowDetails(Business business)
     {
         selectedBusiness = business;
+        isLoadingPackages = true;
+        modalPackages = null; 
+
+        try 
+        {
+            modalPackages = await Http.GetFromJsonAsync<List<Package>>($"api/package/business/{business.ID}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching packages: {ex.Message}");
+            modalPackages = new List<Package>(); 
+        }
+        finally
+        {
+            isLoadingPackages = false;
+        }
     }
 
     private void CloseDetails()
     {
         selectedBusiness = null;
+        modalPackages = null;
     }
 }

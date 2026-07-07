@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EcoMealApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+88ae630eaca3a29c66a338aa971fb5d1692419f5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab9d710557d9569bd15d71c07f3507bfac6e3e99")]
 [assembly: System.Reflection.AssemblyProductAttribute("EcoMealApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EcoMealApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

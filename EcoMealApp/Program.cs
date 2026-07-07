@@ -14,6 +14,7 @@ builder.Services.AddDbContext<EcoMealDbContext>(options =>
 
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddScoped<IBusinessTypeService, BusinessTypeService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
 
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
