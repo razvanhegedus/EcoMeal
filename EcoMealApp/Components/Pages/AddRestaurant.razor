@@ -1,0 +1,108 @@
+@page "/add-restaurant"
+@rendermode InteractiveServer
+
+@using EcoMealApp.Data.Entities
+@using EcoMealApp.Services
+@inject IBusinessService BusinessService
+@inject NavigationManager Navigation
+
+<PageTitle>Add New Restaurant</PageTitle>
+
+<h1>Add a New Restaurant</h1>
+<hr />
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" style="max-width: 400px;">@errorMessage</div>
+}
+
+<EditForm Model="newRestaurant" FormName="AddRestaurantForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="form-group mb-3" style="max-width: 400px;">
+        <label for="name" class="form-label">Name</label>
+        <InputText id="name" @bind-Value="newRestaurant.Name" class="form-control" />
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 400px;">
+        <label for="category" class="form-label">Category</label>
+        <InputSelect id="category" @bind-Value="newRestaurant.BusinessTypeID" class="form-select">
+            <option value="@Guid.Empty">-- Select a Category --</option>
+            @foreach (var type in businessTypes)
+            {
+                <option value="@type.ID">@type.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 400px;">
+        <label for="description" class="form-label">Description</label>
+        <InputTextArea id="description" @bind-Value="newRestaurant.Description" class="form-control" rows="3" />
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 400px;">
+        <label for="address" class="form-label">Address</label>
+        <InputText id="address" @bind-Value="newRestaurant.Address" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+
+</EditForm>
+
+@code {
+    private Business newRestaurant = new Business();
+    private List<BusinessType> businessTypes = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        businessTypes = await BusinessService.GetBusinessTypesAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        
+        if (string.IsNullOrWhiteSpace(newRestaurant.Name))
+        {
+            errorMessage = "Please type a name."; 
+            return;
+        }
+        
+        if (newRestaurant.BusinessTypeID == Guid.Empty)
+        {
+            errorMessage = "Please select a category.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(newRestaurant.Description))
+        {
+            errorMessage = "Please type a description."; 
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(newRestaurant.Address))
+        {
+            errorMessage = "Please type an address."; 
+            return;
+        }
+        
+
+        errorMessage = null;
+        newRestaurant.ID = Guid.NewGuid();
+        
+        await BusinessService.CreateBusinessAsync(newRestaurant);
+        Navigation.NavigateTo("/weather");
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fill out all required fields.";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/weather");
+    }
+}
