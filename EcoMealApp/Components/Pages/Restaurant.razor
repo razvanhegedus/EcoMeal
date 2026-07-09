@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 
 @using EcoMealApp.Data.Entities
-@using EcoMealApp.Services
 @inject HttpClient Http
 
 <PageTitle>Restaurants</PageTitle>
@@ -12,7 +11,6 @@
 <a href="/add-restaurant" class="btn btn-success mb-4" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
     + Add New Restaurant
 </a>
-
 
 @if (businesses == null)
 {
@@ -25,25 +23,36 @@ else
     <div class="card__container" style="display: flex; gap: 1rem; flex-wrap: wrap;">
         @foreach (var restaurant in businesses)
         {
-            @* 1. Added display: flex and flex-direction: column to the main card *@
-            <div class="card" style="width: 200px; height: 280px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column;">
+            <div class="card" style="width: 200px; height: 360px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column;">
                 
                 <img src="@(string.IsNullOrEmpty(restaurant.ImageURL) ? "default_restaurant.png" : restaurant.ImageURL)" alt="@restaurant.Name" style="width:100%; height: 120px; object-fit: cover; border-radius: 4px;">
         
-                @* 2. Made the text container a flex column and added flex-grow: 1 *@
                 <div class="container" style="text-align: center; margin-top: 10px; display: flex; flex-direction: column; flex-grow: 1;">
                     
-                    @* To keep things clean, added a smaller font-size and margin-bottom *@
                     <h4 style="font-size: 1.1rem; margin-bottom: 2px;"><b>@restaurant.Name</b></h4>
                     <p style="color: #666; font-size: 0.9rem;">@restaurant.BusinessType?.Name</p>
                     
-                    @* 3. margin-top: auto is the magic trick that pushes the button to the bottom! *@
-                    <button class="btn btn-primary" @onclick="() => ShowDetails(restaurant)" style="margin-top: auto;">View Details</button>
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <button class="btn btn-primary w-100" @onclick="() => ShowDetails(restaurant)">
+                            View Packages
+                        </button>
+                        
+                        <a href="/edit-restaurant/@restaurant.ID" class="btn btn-secondary w-100">
+                            Edit
+                        </a>
+
+                        <button class="btn btn-danger w-100" @onclick="() => OpenMainDeletePopup(restaurant)">
+                            Delete
+                        </button>
+                    </div>
+                    
+
                 </div>
             </div>
         }
     </div>
     
+
     @if (selectedBusiness != null)
     {
         <div id="fade" class="black_overlay" @onclick="CloseDetails"></div>
@@ -78,7 +87,27 @@ else
                 <p style="color: #888; font-style: italic;">No packages currently available.</p>
             }
             
-            <button class="btn btn-secondary" style="margin-top: 15px;" @onclick="CloseDetails">Close</button>
+            <hr style="margin: 20px 0;" />
+
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+            </div>
+        </div>
+    }
+
+    @if (showMainDeletePopup && restaurantToDelete != null)
+    {
+        <div class="black_overlay" @onclick="CancelMainDelete"></div>
+        
+        <div class="small_modal">
+            <h4 style="color: #dc3545; margin-top: 0;">Delete Restaurant</h4>
+            <p>Are you sure you want to permanently delete <strong>@restaurantToDelete.Name</strong> and all of its associated packages?</p>
+            <p style="font-size: 0.85rem; color: #666;">This action cannot be undone.</p>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" @onclick="CancelMainDelete">Cancel</button>
+                <button class="btn btn-danger" @onclick="ConfirmMainDelete">Yes, Delete</button>
+            </div>
         </div>
     }
 }
@@ -86,10 +115,14 @@ else
 
 @code {
     private List<Business>? businesses;
-    private Business? selectedBusiness; 
     
+    // --- View Details Modal State ---
+    private Business? selectedBusiness; 
     private List<Package>? modalPackages;
     private bool isLoadingPackages = false;
+
+    private Business? restaurantToDelete;
+    private bool showMainDeletePopup = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,5 +154,34 @@ else
     {
         selectedBusiness = null;
         modalPackages = null;
+    }
+
+    private void OpenMainDeletePopup(Business business)
+    {
+        restaurantToDelete = business;
+        showMainDeletePopup = true;
+    }
+
+    private void CancelMainDelete()
+    {
+        restaurantToDelete = null;
+        showMainDeletePopup = false;
+    }
+
+    private async Task ConfirmMainDelete()
+    {
+        if (restaurantToDelete == null) return;
+
+        var response = await Http.DeleteAsync($"api/business/{restaurantToDelete.ID}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            businesses?.Remove(restaurantToDelete);
+            CancelMainDelete();
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete the restaurant.");
+        }
     }
 }

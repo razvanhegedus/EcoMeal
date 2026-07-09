@@ -1,0 +1,159 @@
+@page "/edit-restaurant/{id:guid}"
+@rendermode InteractiveServer
+
+@using EcoMealApp.Data.Entities
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Restaurant</PageTitle>
+
+<h1>Edit Restaurant</h1>
+<hr />
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" style="max-width: 400px;">@errorMessage</div>
+}
+
+@if (editRestaurant == null)
+{
+    <p><em>Loading restaurant data...</em></p>
+}
+else
+{
+    <EditForm Model="editRestaurant" FormName="EditRestaurantForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="form-group mb-3" style="max-width: 400px;">
+            <label for="name" class="form-label">Name</label>
+            <InputText id="name" @bind-Value="editRestaurant.Name" class="form-control" />
+        </div>
+        
+        <div class="form-group mb-3" style="max-width: 400px;">
+            <label for="description" class="form-label">Description</label>
+            <InputTextArea id="description" @bind-Value="editRestaurant.Description" class="form-control" rows="3" />
+        </div>
+        
+        
+        <div class="form-group mb-3" style="max-width: 400px;">
+            <label class="form-label">Restaurant Image</label>
+        
+            @if (!string.IsNullOrEmpty(editRestaurant.ImageURL))
+            {
+                <div class="mb-2">
+                    <img src="@editRestaurant.ImageURL" alt="Preview" style="max-width: 100%; height: auto; border-radius: 8px;" />
+                </div>
+            }
+        
+            <InputFile OnChange="HandleImageUpload" class="form-control" accept="image/*" />
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 400px;">
+            <label for="address" class="form-label">Address</label>
+            <InputText id="address" @bind-Value="editRestaurant.Address" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    private Business? editRestaurant;
+    private string? errorMessage;
+    
+    [Parameter]
+    public Guid id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editRestaurant = await Http.GetFromJsonAsync<Business>($"api/business/{id}");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(editRestaurant!.Name))
+        {
+            errorMessage = "Please type a name."; 
+            return;
+        }
+        
+
+        if (editRestaurant.BusinessTypeID == Guid.Empty)
+        {
+            errorMessage = "Please select a category.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(editRestaurant.Description))
+        {
+            errorMessage = "Please type a description."; 
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(editRestaurant.Address))
+        {
+            errorMessage = "Please type an address."; 
+            return;
+        }
+
+        errorMessage = null;
+        
+        
+        var response = await Http.PutAsJsonAsync($"api/business/{id}", editRestaurant);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/restaurants");
+        }
+        else
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            errorMessage = $"API Error: {errorDetails}";
+        }
+    }
+    
+    
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        using var content = new MultipartFormDataContent();
+        
+        var fileStream = file.OpenReadStream(maxAllowedSize: 5120000);
+        var streamContent = new StreamContent(fileStream);
+        content.Add(streamContent, "file", file.Name);
+
+        var response = await Http.PostAsync("api/business/upload-image", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ImageUploadResponse>();
+            if (result != null)
+            {
+                editRestaurant!.ImageURL = result.Url;
+            }
+        }
+        else
+        {
+            errorMessage = "Failed to upload the image.";
+        }
+    }
+
+    public class ImageUploadResponse
+    {
+        public string Url { get; set; } = string.Empty;
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fill out all required fields.";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/restaurants");
+    }
+}
