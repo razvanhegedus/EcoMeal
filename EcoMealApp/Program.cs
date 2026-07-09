@@ -16,6 +16,7 @@ builder.Services.AddDbContext<EcoMealDbContext>(options =>
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddScoped<IBusinessTypeService, BusinessTypeService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<IPackageTypeService, PackageTypeService>();
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
