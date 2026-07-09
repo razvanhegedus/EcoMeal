@@ -81,10 +81,7 @@
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/EcoMealApp.pdb
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/EcoMealApp.genruntimeconfig.cache
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/ref/EcoMealApp.dll
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Weather.razor.rz.scp.css
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/EcoMealApp.sourcelink.json
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-onst7vkg8h-onst7vkg8h.gz
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-onst7vkg8h-onst7vkg8h.gz
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/Azure.Core.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/Azure.Identity.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/Microsoft.Bcl.AsyncInterfaces.dll
@@ -212,3 +209,6 @@
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/tr/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Restaurant.razor.rz.scp.css
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-0d0girld8k-0d0girld8k.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-0d0girld8k-0d0girld8k.gz

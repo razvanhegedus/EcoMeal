@@ -1,0 +1,187 @@
+﻿@page "/restaurants"
+@rendermode InteractiveServer
+
+@using EcoMealApp.Data.Entities
+@inject HttpClient Http
+
+<PageTitle>Restaurants</PageTitle>
+
+<h1>Restaurants</h1>
+
+<a href="/add-restaurant" class="btn btn-success mb-4" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+    + Add New Restaurant
+</a>
+
+@if (businesses == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div class="card__container" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        @foreach (var restaurant in businesses)
+        {
+            <div class="card" style="width: 200px; height: 360px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; display: flex; flex-direction: column;">
+                
+                <img src="@(string.IsNullOrEmpty(restaurant.ImageURL) ? "default_restaurant.png" : restaurant.ImageURL)" alt="@restaurant.Name" style="width:100%; height: 120px; object-fit: cover; border-radius: 4px;">
+        
+                <div class="container" style="text-align: center; margin-top: 10px; display: flex; flex-direction: column; flex-grow: 1;">
+                    
+                    <h4 style="font-size: 1.1rem; margin-bottom: 2px;"><b>@restaurant.Name</b></h4>
+                    <p style="color: #666; font-size: 0.9rem;">@restaurant.BusinessType?.Name</p>
+                    
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <button class="btn btn-primary w-100" @onclick="() => ShowDetails(restaurant)">
+                            View Packages
+                        </button>
+                        
+                        <a href="/edit-restaurant/@restaurant.ID" class="btn btn-secondary w-100">
+                            Edit
+                        </a>
+
+                        <button class="btn btn-danger w-100" @onclick="() => OpenMainDeletePopup(restaurant)">
+                            Delete
+                        </button>
+                    </div>
+                    
+
+                </div>
+            </div>
+        }
+    </div>
+    
+
+    @if (selectedBusiness != null)
+    {
+        <div id="fade" class="black_overlay" @onclick="CloseDetails"></div>
+        
+        <div id="light" class="white_content">
+            <h2>@selectedBusiness.Name</h2>
+            <p><strong>Category:</strong> @selectedBusiness.BusinessType?.Name</p>
+            <img src="@(string.IsNullOrEmpty(selectedBusiness.ImageURL) ? "default_restaurant.png" : selectedBusiness.ImageURL)" alt="@selectedBusiness.Name" style="max-height: 150px; border-radius: 8px;" />
+            
+            <hr style="margin: 20px 0;" />
+            <h4>Available Packages</h4>
+            
+            @if (isLoadingPackages)
+            {
+                <p><em>Loading packages...</em></p>
+            }
+            else if (modalPackages != null && modalPackages.Any())
+            {
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    @foreach (var package in modalPackages) 
+                    {
+                        <div style="border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;">
+                            <h5 style="margin: 0;">@package.Name</h5>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">@package.Description</p>
+                            <span style="font-weight: bold; color: #28a745;">$@package.Price</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="color: #888; font-style: italic;">No packages currently available.</p>
+            }
+            
+            <hr style="margin: 20px 0;" />
+
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+            </div>
+        </div>
+    }
+
+    @if (showMainDeletePopup && restaurantToDelete != null)
+    {
+        <div class="black_overlay" @onclick="CancelMainDelete"></div>
+        
+        <div class="small_modal">
+            <h4 style="color: #dc3545; margin-top: 0;">Delete Restaurant</h4>
+            <p>Are you sure you want to permanently delete <strong>@restaurantToDelete.Name</strong> and all of its associated packages?</p>
+            <p style="font-size: 0.85rem; color: #666;">This action cannot be undone.</p>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" @onclick="CancelMainDelete">Cancel</button>
+                <button class="btn btn-danger" @onclick="ConfirmMainDelete">Yes, Delete</button>
+            </div>
+        </div>
+    }
+}
+
+
+@code {
+    private List<Business>? businesses;
+    
+    // --- View Details Modal State ---
+    private Business? selectedBusiness; 
+    private List<Package>? modalPackages;
+    private bool isLoadingPackages = false;
+
+    private Business? restaurantToDelete;
+    private bool showMainDeletePopup = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        businesses = await Http.GetFromJsonAsync<List<Business>>("api/business");
+    }
+
+    private async Task ShowDetails(Business business)
+    {
+        selectedBusiness = business;
+        isLoadingPackages = true;
+        modalPackages = null; 
+
+        try 
+        {
+            modalPackages = await Http.GetFromJsonAsync<List<Package>>($"api/package/business/{business.ID}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching packages: {ex.Message}");
+            modalPackages = new List<Package>(); 
+        }
+        finally
+        {
+            isLoadingPackages = false;
+        }
+    }
+
+    private void CloseDetails()
+    {
+        selectedBusiness = null;
+        modalPackages = null;
+    }
+
+    private void OpenMainDeletePopup(Business business)
+    {
+        restaurantToDelete = business;
+        showMainDeletePopup = true;
+    }
+
+    private void CancelMainDelete()
+    {
+        restaurantToDelete = null;
+        showMainDeletePopup = false;
+    }
+
+    private async Task ConfirmMainDelete()
+    {
+        if (restaurantToDelete == null) return;
+
+        var response = await Http.DeleteAsync($"api/business/{restaurantToDelete.ID}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            businesses?.Remove(restaurantToDelete);
+            CancelMainDelete();
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete the restaurant.");
+        }
+    }
+}

@@ -1,15 +1,25 @@
+using System.Text.Json.Serialization;
 using EcoMealApp.Components;
 using EcoMealApp.Data;
 using Microsoft.EntityFrameworkCore;
+using EcoMealApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDbContext<EcoMealDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("EcoMealDb")));
+
+builder.Services.AddScoped<IBusinessService, BusinessService>();
+builder.Services.AddScoped<IBusinessTypeService, BusinessTypeService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
+
+builder.Services.AddControllers().AddJsonOptions(x =>
+    x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+
+builder.Services.AddScoped(hp => new  HttpClient { BaseAddress = new Uri("http://localhost:5029/")});
 
 var app = builder.Build();
 
@@ -25,6 +35,8 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
+
+app.MapControllers();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
