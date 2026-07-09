@@ -1,31 +1,27 @@
-using EcoMealApp.Data;
 using EcoMealApp.Data.Entities;
-using Microsoft.EntityFrameworkCore;
-
+using EcoMealApp.Data.Repositories; 
 
 namespace EcoMealApp.Services;
 
 public class BusinessService : IBusinessService
 {
-    private readonly EcoMealDbContext _context;
+    private readonly IBusinessRepository _businessRepository;
     private readonly IWebHostEnvironment _environment;
 
-    public BusinessService(EcoMealDbContext context, IWebHostEnvironment environment)
+    public BusinessService(IBusinessRepository businessRepository, IWebHostEnvironment environment)
     {
-        _context = context;
+        _businessRepository = businessRepository;
         _environment = environment;
     }
 
     public async Task<List<Business>> GetAllBusinessesAsync()
     {
-        return await _context.Businesses
-            .Include(b => b.BusinessType)
-            .ToListAsync();
+        return await _businessRepository.GetAllWithTypesAsync();
     }
 
-    public async Task<Business> GetBusinessAsync(Guid id)
+    public async Task<Business?> GetBusinessAsync(Guid id)
     {
-        return await _context.Businesses.FindAsync(id);
+        return await _businessRepository.GetByIdAsync(id);
     }
     
     public async Task<Business> CreateBusinessAsync(Business newBusiness)
@@ -35,38 +31,28 @@ public class BusinessService : IBusinessService
             newBusiness.ImageURL = "default_restaurant.png";
         }
 
-        _context.Businesses.Add(newBusiness);
-
-        await _context.SaveChangesAsync();
-
-        return newBusiness;
+        return await _businessRepository.AddAsync(newBusiness);
     }
     
-    public async Task<Business> DeleteBusinessAsync(Guid id)
+    public async Task<Business?> DeleteBusinessAsync(Guid id)
     {
-        var businessToDelete = await _context.Businesses.FindAsync(id);
+        var businessToDelete = await _businessRepository.GetByIdAsync(id);
 
         if (businessToDelete == null)
         {
             return null; 
         }
 
-        _context.Businesses.Remove(businessToDelete);
-
-        await _context.SaveChangesAsync();
+        await _businessRepository.DeleteAsync(businessToDelete);
 
         return businessToDelete;
     }
-    
     
     public async Task<bool> UpdateBusinessAsync(Business updatedBusiness)
     {
         try
         {
-            _context.Businesses.Update(updatedBusiness);
-        
-            await _context.SaveChangesAsync();
-        
+            await _businessRepository.UpdateAsync(updatedBusiness);
             return true; 
         }
         catch (Exception ex)
@@ -80,7 +66,7 @@ public class BusinessService : IBusinessService
     {
         if (file == null || file.Length == 0)
         {
-            return null; // Return null if invalid
+            return null; 
         }
 
         var uploadsFolder = Path.Combine(_environment.WebRootPath, "images");
@@ -99,5 +85,4 @@ public class BusinessService : IBusinessService
 
         return $"/images/{uniqueFileName}";
     }
-    
 }

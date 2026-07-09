@@ -1,20 +1,19 @@
-using EcoMealApp.Data;
 using EcoMealApp.Data.Entities;
-using Microsoft.EntityFrameworkCore;
+using EcoMealApp.Data.Repositories; 
 
 namespace EcoMealApp.Services;
 
 public class BusinessTypeService : IBusinessTypeService
 {
-    private readonly EcoMealDbContext _context;
+    private readonly IRepository<BusinessType> _repository;
 
-    public BusinessTypeService(EcoMealDbContext context)
+    public BusinessTypeService(IRepository<BusinessType> repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     public async Task<List<BusinessType>> GetBusinessTypesAsync()
     {
-        return await _context.BusinessTypes.ToListAsync();
+        return await _repository.GetAllAsync();
     }
 }
