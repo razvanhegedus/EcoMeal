@@ -71,3 +71,4 @@ secrets.json
 
 # If you use a local development appsettings file that shouldn't be shared:
 # appsettings.Development.json
+.idea/
