@@ -361,6 +361,30 @@ main[b-yiqvmle1rg] {
         opacity: 0;
     }
 }
+/* /Components/Pages/Packages.razor.rz.scp.css */
+.black_overlay[b-h3sccogc9q] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.small_modal[b-h3sccogc9q] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    width: 90%;
+    max-width: 400px;
+}
 /* /Components/Pages/Restaurant.razor.rz.scp.css */
 .card__container[b-keqzkt1kzp] {
     display: flex;

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using EcoMealApp.Components;
 using EcoMealApp.Data;
+using EcoMealApp.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using EcoMealApp.Services;
 
@@ -15,6 +16,10 @@ builder.Services.AddDbContext<EcoMealDbContext>(options =>
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddScoped<IBusinessTypeService, BusinessTypeService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<IPackageTypeService, PackageTypeService>();
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
+builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);

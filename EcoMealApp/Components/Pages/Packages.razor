@@ -1,0 +1,241 @@
+﻿@page "/packages"
+@rendermode InteractiveServer
+
+@using EcoMealApp.Data.Entities
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Package Management</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Packages</h1>
+        
+        <button class="btn btn-primary shadow-sm" @onclick="GoToAddPage">
+            <i class="bi bi-plus-lg me-2"></i> Add New Package
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Package Name</th>
+                        <th style="width: 60px;">Image</th>
+                        <th>Business</th>
+                        <th>Pickup Window</th>
+                        <th>Price</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var p in packages)
+                    {
+                        <tr>
+                            <td class="fw-bold">@p.Name</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(p.ImageURL))
+                                {
+                                    <img src="@p.ImageURL" alt="img" class="rounded shadow-sm" style="width: 35px; height: 35px; object-fit: cover;"/>
+                                }
+                                else
+                                {
+                                    <div class="rounded bg-light text-secondary d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                                        <i class="bi bi-image" style="font-size: 1rem;"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td class="text-muted">
+                                @(businesses.FirstOrDefault(b => b.ID == p.BusinessID)?.Name ?? "Unknown")
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-clock me-1"></i> @p.PickupStart.ToString("HH:mm") - @p.PickupEnd.ToString("HH:mm")
+                                </span>
+                            </td>
+                            <td class="fw-bold text-success">$@p.Price.ToString("0.00")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-info me-2" @onclick="() => OpenViewModal(p)">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => GoToEditPage(p.ID)">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeletePopup(p)">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!packages.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No packages found.</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        
+    }
+</div>
+
+@if (isViewModalOpen && selectedPackage != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">@selectedPackage.Name</h5>
+                    <button type="button" class="btn-close" @onclick="CloseViewModal"></button>
+                </div>
+                
+                <div class="modal-body text-center p-0">
+                    @if (!string.IsNullOrEmpty(selectedPackage.ImageURL))
+                    {
+                        <img src="@selectedPackage.ImageURL" alt="@selectedPackage.Name" class="img-fluid w-100" style="max-height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center w-100" style="height: 150px;">
+                            <i class="bi bi-image text-secondary" style="font-size: 3rem;"></i>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary fs-6">
+                            <i class="bi bi-shop me-1"></i> @(businesses.FirstOrDefault(b => b.ID == selectedPackage.BusinessID)?.Name ?? "Unknown")
+                        </span>
+                        <h4 class="text-success fw-bold mb-0">$@selectedPackage.Price.ToString("0.00")</h4>
+                    </div>
+                    
+                    <div class="mb-3 text-start">
+                        <span class="text-muted small fw-bold text-uppercase border-bottom pb-1 d-block mb-2">Pickup Window</span>
+                        <span><i class="bi bi-clock me-2"></i> @selectedPackage.PickupStart.ToString("HH:mm") to @selectedPackage.PickupEnd.ToString("HH:mm")</span>
+                    </div>
+
+                    <div class="text-start">
+                        <span class="text-muted small fw-bold text-uppercase border-bottom pb-1 d-block mb-2">Description</span>
+                        <p class="text-muted mb-0">@selectedPackage.Description</p>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top-0 bg-light">
+                    <button type="button" class="btn btn-secondary w-100" @onclick="CloseViewModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showDeletePopup && packageToDelete != null)
+{
+    <div class="black_overlay" @onclick="CancelDelete"></div>
+    
+    <div class="small_modal">
+        <h4 style="color: #dc3545; margin-top: 0;">Delete Package</h4>
+        <p>Are you sure you want to permanently delete <strong>@packageToDelete.Name</strong>?</p>
+        <p style="font-size: 0.85rem; color: #666;">This action cannot be undone.</p>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+            <button class="btn btn-danger" @onclick="ConfirmDelete">Yes, Delete</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Package> packages = new();
+    private List<Business> businesses = new();
+    private Package? packageToDelete;
+    private bool showDeletePopup = false;
+    
+    private bool isLoading = true;
+    
+    private bool isViewModalOpen = false;
+    private Package? selectedPackage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            packages = await Http.GetFromJsonAsync<List<Package>>("api/package") ?? new List<Package>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenViewModal(Package pkg)
+    {
+        selectedPackage = pkg;
+        isViewModalOpen = true;
+    }
+
+    private void CloseViewModal()
+    {
+        isViewModalOpen = false;
+        selectedPackage = null;
+    }
+
+    private void GoToAddPage()
+    {
+        NavigationManager.NavigateTo("/packages/create");
+    }
+
+    private void GoToEditPage(Guid id)
+    {
+        NavigationManager.NavigateTo($"/packages/edit/{id}");
+    }
+
+    private void OpenDeletePopup(Package pkg)
+    {
+        packageToDelete = pkg;
+        showDeletePopup = true;
+    }
+
+    private void CancelDelete()
+    {
+        packageToDelete = null;
+        showDeletePopup = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (packageToDelete == null) return;
+
+        var response = await Http.DeleteAsync($"api/package/{packageToDelete.ID}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            packages.Remove(packageToDelete);
+            CancelDelete();
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete the package.");
+        }
+    }
+}

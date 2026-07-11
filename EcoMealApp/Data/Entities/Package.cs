@@ -8,11 +8,11 @@ public class Package
 
     public Guid BusinessID { get; set; }
         
-    public Business Business { get; set; }
+    public Business? Business { get; set; }
 
     public Guid PackageTypeID { get; set; }
         
-    public PackageType PackageType { get; set; }
+    public PackageType? PackageType { get; set; }
 
     public string Name { get; set; }
 

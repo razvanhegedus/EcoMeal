@@ -1,0 +1,245 @@
+@page "/packages/edit/{id:guid}"
+@rendermode InteractiveServer
+
+@using EcoMealApp.Data.Entities
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Package</PageTitle>
+
+<h1>Edit Package</h1>
+<hr />
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" style="max-width: 600px;">@errorMessage</div>
+}
+
+@if (editPackage == null)
+{
+    <p><em>Loading package data...</em></p>
+}
+else
+{
+    <EditForm Model="editPackage" FormName="EditPackageForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row" style="max-width: 600px;">
+            <div class="col-md-6 form-group mb-3">
+                <label for="name" class="form-label">Package Name</label>
+                <InputText id="name" @bind-Value="editPackage.Name" class="form-control" />
+            </div>
+
+            <div class="col-md-6 form-group mb-3">
+                <label for="business" class="form-label">Business</label>
+                <InputSelect id="business" @bind-Value="editPackage.BusinessID" class="form-select">
+                    <option value="@Guid.Empty">-- Select Business --</option>
+                    @foreach (var business in businesses)
+                    {
+                        <option value="@business.ID">@business.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 600px;">
+            <label for="packageType" class="form-label">Package Type</label>
+            <InputSelect id="packageType" @bind-Value="editPackage.PackageTypeID" class="form-select">
+                <option value="@Guid.Empty">-- Select Package Type --</option>
+                @foreach (var type in packageTypes)
+                {
+                    <option value="@type.ID">@type.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="row" style="max-width: 600px;">
+            <div class="col-md-6 form-group mb-3">
+                <label for="price" class="form-label">Price</label>
+                <InputNumber id="price" @bind-Value="editPackage.Price" class="form-control" />
+            </div>
+
+            <div class="col-md-6 form-group mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <InputNumber id="quantity" @bind-Value="editPackage.Quantity" class="form-control" />
+            </div>
+        </div>
+
+        <div class="row" style="max-width: 600px;">
+            <div class="col-md-6 form-group mb-3">
+                <label for="pickupStart" class="form-label">Pickup Start Time</label>
+                <InputDate id="pickupStart" Type="InputDateType.Time" @bind-Value="pickupStartTime" class="form-control" />
+            </div>
+
+            <div class="col-md-6 form-group mb-3">
+                <label for="pickupEnd" class="form-label">Pickup End Time</label>
+                <InputDate id="pickupEnd" Type="InputDateType.Time" @bind-Value="pickupEndTime" class="form-control" />
+            </div>
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 600px;">
+            <label for="description" class="form-label">Description</label>
+            <InputTextArea id="description" @bind-Value="editPackage.Description" class="form-control" rows="3" />
+        </div>
+        
+        <div class="form-group mb-4" style="max-width: 600px;">
+            <label class="form-label">Package Image</label>
+        
+            @if (!string.IsNullOrEmpty(editPackage.ImageURL))
+            {
+                <div class="mb-2">
+                    <img src="@editPackage.ImageURL" alt="Preview" style="max-width: 200px; height: auto; border-radius: 8px;" />
+                </div>
+            }
+        
+            <InputFile OnChange="HandleImageUpload" class="form-control" accept="image/*" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; }
+
+    private Package? editPackage;
+    private string? errorMessage;
+    
+    // UI bindings for the time inputs
+    private TimeOnly pickupStartTime;
+    private TimeOnly pickupEndTime;
+    
+    private List<Business> businesses = new();
+    private List<PackageType> packageTypes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            packageTypes = await Http.GetFromJsonAsync<List<PackageType>>("api/packageType") ?? new List<PackageType>();
+
+            editPackage = await Http.GetFromJsonAsync<Package>($"api/package/{id}");
+            
+            if (editPackage != null)
+            {
+                pickupStartTime = TimeOnly.FromDateTime(editPackage.PickupStart);
+                pickupEndTime = TimeOnly.FromDateTime(editPackage.PickupEnd);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load data.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (editPackage == null) return;
+
+        editPackage.PickupStart = DateTime.Today.Add(pickupStartTime.ToTimeSpan());
+        editPackage.PickupEnd = DateTime.Today.Add(pickupEndTime.ToTimeSpan());
+
+        if (string.IsNullOrWhiteSpace(editPackage.Name))
+        {
+            errorMessage = "Please type a name."; 
+            return;
+        }
+        
+        if (editPackage.BusinessID == Guid.Empty)
+        {
+            errorMessage = "Please select a business.";
+            return;
+        }
+
+        if (editPackage.PackageTypeID == Guid.Empty)
+        {
+            errorMessage = "Please select a package type.";
+            return;
+        }
+        
+        if (editPackage.Price <= 0)
+        {
+            errorMessage = "Price must be greater than zero.";
+            return;
+        }
+
+        if (editPackage.Quantity <= 0)
+        {
+            errorMessage = "Quantity must be at least 1.";
+            return;
+        }
+
+        if (editPackage.PickupEnd <= editPackage.PickupStart)
+        {
+            errorMessage = "Pickup End time must be after Pickup Start time.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(editPackage.Description))
+        {
+            errorMessage = "Please type a description."; 
+            return;
+        }
+
+        errorMessage = null;
+        
+        var response = await Http.PutAsJsonAsync($"api/package/{id}", editPackage);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/packages");
+        }
+        else
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            errorMessage = $"API Error: {errorDetails}";
+        }
+    }
+    
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        using var content = new MultipartFormDataContent();
+        
+        var fileStream = file.OpenReadStream(maxAllowedSize: 5120000);
+        var streamContent = new StreamContent(fileStream);
+        content.Add(streamContent, "file", file.Name);
+
+        var response = await Http.PostAsync("api/package/upload-image", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ImageUploadResponse>();
+            if (result != null)
+            {
+                editPackage!.ImageURL = result.Url;
+            }
+        }
+        else
+        {
+            errorMessage = "Failed to upload the image.";
+        }
+    }
+
+    public class ImageUploadResponse
+    {
+        public string Url { get; set; } = string.Empty;
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fill out all required fields.";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/packages");
+    }
+}
