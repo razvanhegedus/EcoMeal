@@ -211,5 +211,7 @@
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Restaurant.razor.rz.scp.css
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Packages.razor.rz.scp.css
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-2janroy80e-2janroy80e.gz
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-2janroy80e-2janroy80e.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Order.razor.rz.scp.css
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-oro5rk9rkk-oro5rk9rkk.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-oro5rk9rkk-oro5rk9rkk.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/BCrypt-Net-Next.dll
