@@ -11,4 +11,5 @@ public interface IPackageService
     Task<bool> UpdatePackageAsync(Package updatedPackage);
     Task<string?> UploadImageAsync(IFormFile file);
     Task<Package?> GetPackageAsync(Guid id);
+    Task<bool> UpdatePackageQuantityAsync(Package updatedPackage);
 }

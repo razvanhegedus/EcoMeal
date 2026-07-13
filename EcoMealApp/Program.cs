@@ -24,6 +24,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPackageTypeService, PackageTypeService>();
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
@@ -84,7 +85,7 @@ app.UseAuthentication(); // Must execute before UseAuthorization
 app.UseAuthorization();  // Evaluates policies before mapping handlers
 
 // --- ENDPOINT MAPPINGS ---
-app.MapControllers();
+app.MapControllers().DisableAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

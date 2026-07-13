@@ -361,8 +361,8 @@ main[b-yiqvmle1rg] {
         opacity: 0;
     }
 }
-/* /Components/Pages/Order.razor.rz.scp.css */
-.black_overlay[b-r3irs3ooxw] {
+/* /Components/Pages/OrderPage.razor.rz.scp.css */
+.black_overlay[b-q2ie7215k7] {
     position: fixed;
     top: 0;
     left: 0;
@@ -372,7 +372,7 @@ main[b-yiqvmle1rg] {
     z-index: 1040;
 }
 
-.small_modal[b-r3irs3ooxw] {
+.small_modal[b-q2ie7215k7] {
     position: fixed;
     top: 50%;
     left: 50%;

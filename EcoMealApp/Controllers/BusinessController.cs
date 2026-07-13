@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using EcoMealApp.Services;
 using EcoMealApp.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EcoMealApp.Controllers;
 

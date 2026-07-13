@@ -33,7 +33,6 @@ public class AuthController : ControllerBase
             return Redirect("/login?error=Invalid email or password.");
         }
 
-        // 3. Build the User's Claims (The data locked inside the cookie)
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
@@ -44,24 +43,16 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.Role, user.Role?.Name ?? "Standard User")
         };
 
-        // If your Role entity is loaded, you can add role claims here:
-        // if (user.Role != null && !string.IsNullOrWhiteSpace(user.Role.Name))
-        // {
-        //     claims.Add(new Claim(ClaimTypes.Role, user.Role.Name));
-        // }
 
-        // 4. Create the Identity and Principal
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
 
-        // 5. Configure the cookie properties
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = true, // Keeps the user logged in across browser restarts
-            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15) // Standard "Remember Me" duration
+            IsPersistent = true, 
+            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15)
         };
 
-        // 6. Issue the Secure Cookie!
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme, 
             principal, 
@@ -73,7 +64,6 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        // This instructs the browser to destroy the authentication cookie
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return Redirect("/login");
     }
