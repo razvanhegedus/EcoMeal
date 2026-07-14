@@ -10,7 +10,7 @@ public class User
     
     public Business? Business { get; set; }
     
-    public Role Role { get; set; }
+    public Role? Role { get; set; }
     
     public string? Email { get; set; }
     

@@ -24,11 +24,9 @@ public class AuthController : ControllerBase
 
         if (success)
         {
-            // Redirects back to either the requested page or home page
             return LocalRedirect(returnUrl ?? "/");
         }
 
-        // Redirects back to login with a clean error query parameter
         return LocalRedirect($"/account/login?error=Invalid email or password&returnUrl={returnUrl}");
     }
 
@@ -38,9 +36,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterAsync(
         [FromForm] RegisterRequest request, 
         [FromForm] string name, 
+        [FromForm] string role,
         [FromQuery] string? returnUrl)
     {
-        bool success = await _authService.RegisterAsync(request, name);
+        bool success = await _authService.RegisterAsync(request, name, role);
 
         if (success)
         {

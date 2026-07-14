@@ -47,12 +47,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRSZXN0YXVyYW50LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/AddUser.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRVc2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/EditPackage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FZGl0UGFja2FnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/EditRestaurant.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FZGl0UmVzdGF1cmFudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/EditUser.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FZGl0VXNlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/Error.razor]

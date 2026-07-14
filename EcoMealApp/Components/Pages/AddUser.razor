@@ -1,0 +1,125 @@
+@page "/users/create"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+@using EcoMealApp.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Add New User</PageTitle>
+
+<h1>Add a New User</h1>
+<hr />
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" style="max-width: 500px;">@errorMessage</div>
+}
+
+<EditForm Model="newUser" FormName="AddUserForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group mb-3" style="max-width: 500px;">
+        <label for="name" class="form-label">Full Name</label>
+        <InputText id="name" @bind-Value="newUser.Name" class="form-control" />
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 500px;">
+        <label for="email" class="form-label">Email Address</label>
+        <InputText id="email" type="email" @bind-Value="newUser.Email" class="form-control" />
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 500px;">
+        <label for="password" class="form-label">Password</label>
+        <InputText id="password" type="password" @bind-Value="newUser.Password" class="form-control" />
+    </div>
+
+    <div class="form-group mb-3" style="max-width: 500px;">
+        <label for="role" class="form-label">System Role</label>
+        <InputSelect id="role" @bind-Value="newUser.RoleId" class="form-select">
+            <option value="@Guid.Empty">-- Select a Role --</option>
+            @foreach (var role in roles)
+            {
+                <option value="@role.ID">@role.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group mb-4" style="max-width: 500px;">
+        <label for="business" class="form-label">Assigned Business (Optional)</label>
+        <InputSelect id="business" @bind-Value="newUser.BusinessId" class="form-select">
+            <option value="">-- None --</option>
+            @foreach (var business in businesses)
+            {
+                <option value="@business.ID">@business.Name</option>
+            }
+        </InputSelect>
+        <div class="form-text">Only required for Business Managers.</div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save User</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+
+</EditForm>
+
+@code {
+    private User newUser = new User();
+    private List<Role> roles = new();
+    private List<Business> businesses = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            roles = await Http.GetFromJsonAsync<List<Role>>("api/role") ?? new List<Role>();
+            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load initial data.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(newUser.Name) || string.IsNullOrWhiteSpace(newUser.Email) || string.IsNullOrWhiteSpace(newUser.Password))
+        {
+            errorMessage = "Name, Email, and Password are required."; 
+            return;
+        }
+
+        if (newUser.RoleId == Guid.Empty)
+        {
+            errorMessage = "Please select a Role.";
+            return;
+        }
+
+        errorMessage = null;
+        newUser.ID = Guid.NewGuid();
+        
+        var response = await Http.PostAsJsonAsync("api/user", newUser);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/users");
+        }
+        else
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            errorMessage = $"API Error: {errorDetails}";
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fill out all required fields.";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/users");
+    }
+}

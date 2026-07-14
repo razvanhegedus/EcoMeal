@@ -1,0 +1,143 @@
+@page "/users/edit/{id:guid}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+@using EcoMealApp.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Edit User</PageTitle>
+
+<h1>Edit User</h1>
+<hr />
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" style="max-width: 500px;">@errorMessage</div>
+}
+
+@if (editUser == null)
+{
+    <p><em>Loading user data...</em></p>
+}
+else
+{
+    <EditForm Model="editUser" FormName="EditUserForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group mb-3" style="max-width: 500px;">
+            <label for="name" class="form-label">Full Name</label>
+            <InputText id="name" @bind-Value="editUser.Name" class="form-control" />
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 500px;">
+            <label for="email" class="form-label">Email Address</label>
+            <InputText id="email" type="email" @bind-Value="editUser.Email" class="form-control" />
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 500px;">
+            <label for="password" class="form-label">New Password (leave blank to keep current)</label>
+            <InputText id="password" type="password" @bind-Value="newPassword" class="form-control" placeholder="Enter a new password..." />
+        </div>
+
+        <div class="form-group mb-3" style="max-width: 500px;">
+            <label for="role" class="form-label">System Role</label>
+            <InputSelect id="role" @bind-Value="editUser.RoleId" class="form-select">
+                <option value="@Guid.Empty">-- Select a Role --</option>
+                @foreach (var role in roles)
+                {
+                    <option value="@role.ID">@role.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group mb-4" style="max-width: 500px;">
+            <label for="business" class="form-label">Assigned Business (Optional)</label>
+            <InputSelect id="business" @bind-Value="editUser.BusinessId" class="form-select">
+                <option value="">-- None --</option>
+                @foreach (var business in businesses)
+                {
+                    <option value="@business.ID">@business.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; }
+
+    private User? editUser;
+    private string newPassword = string.Empty; // Holds the new password if the admin decides to change it
+    
+    private List<Role> roles = new();
+    private List<Business> businesses = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            roles = await Http.GetFromJsonAsync<List<Role>>("api/role") ?? new List<Role>();
+            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            editUser = await Http.GetFromJsonAsync<User>($"api/user/{id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load user data.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (editUser == null) return;
+
+        if (string.IsNullOrWhiteSpace(editUser.Name) || string.IsNullOrWhiteSpace(editUser.Email))
+        {
+            errorMessage = "Name and Email are required."; 
+            return;
+        }
+
+        if (editUser.RoleId == Guid.Empty)
+        {
+            errorMessage = "Please select a Role.";
+            return;
+        }
+
+        // If a new password was typed, update the entity before sending to the API
+        if (!string.IsNullOrWhiteSpace(newPassword))
+        {
+            editUser.Password = newPassword;
+        }
+
+        errorMessage = null;
+        
+        var response = await Http.PutAsJsonAsync($"api/user/{id}", editUser);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/users");
+        }
+        else
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            errorMessage = $"API Error: {errorDetails}";
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fill out all required fields.";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/users");
+    }
+}

@@ -21,7 +21,9 @@ namespace EcoMealApp.Services
 
         public async Task<bool> LoginAsync(LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
             
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
@@ -31,20 +33,26 @@ namespace EcoMealApp.Services
             return await SignInUserAsync(user);
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequest request, string name)
+        public async Task<bool> RegisterAsync(RegisterRequest request, string name, string roleName = "Customer")
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
                 return false;
             }
-
+            
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null)
+            {
+                throw new ApplicationException($"Role {roleName} does not exist");
+            }
             var newUser = new User
             {
                 ID = Guid.NewGuid(),
                 Name = name,
                 Email = request.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                RoleId = Guid.Parse("YOUR-CUSTOMER-ROLE-GUID-HERE") 
+                RoleId = role.ID,
+                Role = role
             };
 
             _context.Users.Add(newUser);
@@ -71,7 +79,8 @@ namespace EcoMealApp.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
                 new Claim(ClaimTypes.Name, user.Name ?? ""),
-                new Claim(ClaimTypes.Email, user.Email ?? "")
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? "Customer")
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
