@@ -5,12 +5,20 @@ using EcoMealApp.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using EcoMealApp.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-Console.WriteLine("=== PASTE THIS IN SQL === " + BCrypt.Net.BCrypt.HashPassword("password123"));
+
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Core Blazor Component Services
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// --- NEW: Required for Blazor to read the cookie ---
+builder.Services.AddCascadingAuthenticationState(); 
+
+// --- NEW: Required for AuthService to issue the cookie ---
+builder.Services.AddHttpContextAccessor();          
 
 // 2. Database Context
 builder.Services.AddDbContext<EcoMealDbContext>(options => 
@@ -28,26 +36,26 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
+// --- NEW: Register your custom Auth Service ---
+builder.Services.AddScoped<IAuthService, AuthService>(); 
+
 // 4. API Controllers & JSON Formatting Configurations
-builder.Services.AddControllers().AddJsonOptions(x =>
+builder.Services.AddControllersWithViews().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-// 5. HTTP Client Configuration
+// 5. HTTP Client Configuration (You can leave this here if you need to call external APIs, 
+// but remember NOT to use it to call your own internal OrderController anymore!)
 builder.Services.AddScoped(hp => new HttpClient { BaseAddress = new Uri("http://localhost:5029/")});
 
-// 6. Anti-Forgery & Security Services
-builder.Services.AddAntiforgery();
-
-// 7. Cookie Authentication Configuration
+// 6. Cookie Authentication Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "EcoMealAuthCookie";
-        options.LoginPath = "/login";                  // Redirect location for unauthorized browser requests
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(15); // Session length match with AuthController
-        options.SlidingExpiration = true;               // Renew cookie lifetime automatically on user activity
+        options.LoginPath = "/login";                  
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(15); 
+        options.SlidingExpiration = true;               
         
-        // Intercept redirects targeting API routes to prevent raw HTML responses
         options.Events.OnRedirectToLogin = context =>
         {
             if (context.Request.Path.StartsWithSegments("/api"))
@@ -62,6 +70,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddAntiforgery(); // Moved up here with other service registrations
 
 var app = builder.Build();
 
@@ -76,16 +85,16 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 // --- MIDDLEWARE PIPELINE EXECUTION ORDER (Strictly Enforced) ---
-app.UseStaticFiles(); // Ensures static elements load without auth challenges
-
+app.UseStaticFiles(); 
 app.UseRouting();
 
-app.UseAntiforgery();    // Must execute after UseRouting
-app.UseAuthentication(); // Must execute before UseAuthorization
-app.UseAuthorization();  // Evaluates policies before mapping handlers
+// THE ORDER HERE IS CRITICAL
+app.UseAuthentication(); // 1. Who are you?
+app.UseAuthorization();  // 2. Are you allowed in?
+app.UseAntiforgery();    // 3. Is this form submission legitimate?
 
 // --- ENDPOINT MAPPINGS ---
-app.MapControllers().DisableAntiforgery();
+app.MapControllers(); // Removed .DisableAntiforgery() so your login form is secure!
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

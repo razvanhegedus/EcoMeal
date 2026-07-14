@@ -1,70 +1,61 @@
 using EcoMealApp.Models.DTO;
 using EcoMealApp.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace EcoMealApp.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IAuthService _authService;
 
-    public AuthController(IUserService userService)
+    public AuthController(IAuthService authService)
     {
-        _userService = userService;
+        _authService = authService;
     }
 
+    // POST: api/auth/login
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromForm] LoginRequest request)
+    [ValidateAntiForgeryToken] // Protects against CSRF on form submission
+    public async Task<IActionResult> LoginAsync([FromForm] LoginRequest request, [FromQuery] string? returnUrl)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        bool success = await _authService.LoginAsync(request);
+
+        if (success)
         {
-            return Redirect("/login?error=Email and password are required.");
+            // Redirects back to either the requested page or home page
+            return LocalRedirect(returnUrl ?? "/");
         }
 
-        var user = await _userService.ValidateUserCredentialsAsync(request.Email, request.Password);
-        
-        if (user == null)
-        {
-            return Redirect("/login?error=Invalid email or password.");
-        }
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
-            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            new Claim(ClaimTypes.Name, user.Name ?? user.Email ?? string.Empty),
-            
-
-            new Claim(ClaimTypes.Role, user.Role?.Name ?? "Standard User")
-        };
-
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        var authProperties = new AuthenticationProperties
-        {
-            IsPersistent = true, 
-            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15)
-        };
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme, 
-            principal, 
-            authProperties);
-
-        return Redirect("/");
+        // Redirects back to login with a clean error query parameter
+        return LocalRedirect($"/account/login?error=Invalid email or password&returnUrl={returnUrl}");
     }
 
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    // POST: api/auth/register
+    [HttpPost("register")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegisterAsync(
+        [FromForm] RegisterRequest request, 
+        [FromForm] string name, 
+        [FromQuery] string? returnUrl)
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Redirect("/login");
+        bool success = await _authService.RegisterAsync(request, name);
+
+        if (success)
+        {
+            return LocalRedirect(returnUrl ?? "/");
+        }
+
+        return LocalRedirect($"/account/register?error=Registration failed. Email might already be in use.&returnUrl={returnUrl}");
+    }
+
+    // POST: api/auth/logout
+    [HttpPost("logout")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LogoutAsync([FromQuery] string? returnUrl)
+    {
+        await _authService.LogoutAsync();
+        return LocalRedirect(returnUrl ?? "/account/login");
     }
 }

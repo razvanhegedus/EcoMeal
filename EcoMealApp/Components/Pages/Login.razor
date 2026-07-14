@@ -1,4 +1,4 @@
-@page "/login"
+@page "/login" 
 @layout LoginLayout
 
 <div class="container mt-5">
@@ -16,6 +16,9 @@
                     }
 
                     <form action="/api/auth/login" method="post">
+                        <AntiforgeryToken />
+                        
+                        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>
@@ -42,4 +45,8 @@
 @code {
     [SupplyParameterFromQuery]
     public string? Error { get; set; }
+
+    // Catches the returnUrl from the browser address bar
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; } 
 }
