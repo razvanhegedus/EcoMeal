@@ -75,6 +75,24 @@ public class PackageController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdatePackageQuantityAsync(Guid id, Package package)
+    {
+        if (id != package.ID)
+        {
+            return BadRequest("The ID in the URL does not match the Package ID.");
+        }
+    
+        var updateSuccessful = await _packageService.UpdatePackageQuantityAsync(package);
+    
+        if (!updateSuccessful)
+        {
+            return NotFound($"Package with ID {id} was not found.");
+        }
+
+        return NoContent();
+    }
+
     [HttpPost("upload-image")]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {

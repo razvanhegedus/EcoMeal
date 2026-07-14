@@ -220,6 +220,9 @@ namespace EcoMealApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -238,6 +241,10 @@ namespace EcoMealApp.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("BusinessId")
+                        .IsUnique()
+                        .HasFilter("[BusinessId] IS NOT NULL");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -325,11 +332,18 @@ namespace EcoMealApp.Migrations
 
             modelBuilder.Entity("EcoMealApp.Data.Entities.User", b =>
                 {
+                    b.HasOne("EcoMealApp.Data.Entities.Business", "Business")
+                        .WithOne("User")
+                        .HasForeignKey("EcoMealApp.Data.Entities.User", "BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EcoMealApp.Data.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
 
                     b.Navigation("Role");
                 });
@@ -339,6 +353,8 @@ namespace EcoMealApp.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Packages");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EcoMealApp.Data.Entities.BusinessType", b =>

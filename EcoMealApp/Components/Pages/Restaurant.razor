@@ -1,7 +1,9 @@
 ﻿@page "/restaurants"
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 @using EcoMealApp.Data.Entities
+@using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
 
 <PageTitle>Restaurants</PageTitle>
@@ -33,9 +35,9 @@ else
                     <p style="color: #666; font-size: 0.9rem;">@restaurant.BusinessType?.Name</p>
                     
                     <div class="d-flex flex-column gap-2 mt-3">
-                        <button class="btn btn-primary w-100" @onclick="() => ShowDetails(restaurant)">
+                        <a href="/order/@restaurant.ID" class="btn btn-primary w-100">
                             View Packages
-                        </button>
+                        </a>
                         
                         <a href="/edit-restaurant/@restaurant.ID" class="btn btn-secondary w-100">
                             Edit
@@ -53,47 +55,47 @@ else
     </div>
     
 
-    @if (selectedBusiness != null)
-    {
-        <div id="fade" class="black_overlay" @onclick="CloseDetails"></div>
-        
-        <div id="light" class="white_content">
-            <h2>@selectedBusiness.Name</h2>
-            <p><strong>Category:</strong> @selectedBusiness.BusinessType?.Name</p>
-            <img src="@(string.IsNullOrEmpty(selectedBusiness.ImageURL) ? "default_restaurant.png" : selectedBusiness.ImageURL)" alt="@selectedBusiness.Name" style="max-height: 150px; border-radius: 8px;" />
-            
-            <hr style="margin: 20px 0;" />
-            <h4>Available Packages</h4>
-            
-            @if (isLoadingPackages)
-            {
-                <p><em>Loading packages...</em></p>
-            }
-            else if (modalPackages != null && modalPackages.Any())
-            {
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                    @foreach (var package in modalPackages) 
-                    {
-                        <div style="border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;">
-                            <h5 style="margin: 0;">@package.Name</h5>
-                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">@package.Description</p>
-                            <span style="font-weight: bold; color: #28a745;">$@package.Price</span>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <p style="color: #888; font-style: italic;">No packages currently available.</p>
-            }
-            
-            <hr style="margin: 20px 0;" />
-
-            <div style="display: flex; justify-content: flex-end;">
-                <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
-            </div>
-        </div>
-    }
+    @* @if (selectedBusiness != null) *@
+    @* { *@
+    @*     <div id="fade" class="black_overlay" @onclick="CloseDetails"></div> *@
+    @*      *@
+    @*     <div id="light" class="white_content"> *@
+    @*         <h2>@selectedBusiness.Name</h2> *@
+    @*         <p><strong>Category:</strong> @selectedBusiness.BusinessType?.Name</p> *@
+    @*         <img src="@(string.IsNullOrEmpty(selectedBusiness.ImageURL) ? "default_restaurant.png" : selectedBusiness.ImageURL)" alt="@selectedBusiness.Name" style="max-height: 150px; border-radius: 8px;" /> *@
+    @*          *@
+    @*         <hr style="margin: 20px 0;" /> *@
+    @*         <h4>Available Packages</h4> *@
+    @*          *@
+    @*         @if (isLoadingPackages) *@
+    @*         { *@
+    @*             <p><em>Loading packages...</em></p> *@
+    @*         } *@
+    @*         else if (modalPackages != null && modalPackages.Any()) *@
+    @*         { *@
+    @*             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"> *@
+    @*                 @foreach (var package in modalPackages)  *@
+    @*                 { *@
+    @*                     <div style="border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;"> *@
+    @*                         <h5 style="margin: 0;">@package.Name</h5> *@
+    @*                         <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">@package.Description</p> *@
+    @*                         <span style="font-weight: bold; color: #28a745;">$@package.Price</span> *@
+    @*                     </div> *@
+    @*                 } *@
+    @*             </div> *@
+    @*         } *@
+    @*         else *@
+    @*         { *@
+    @*             <p style="color: #888; font-style: italic;">No packages currently available.</p> *@
+    @*         } *@
+    @*          *@
+    @*         <hr style="margin: 20px 0;" /> *@
+    @* *@
+    @*         <div style="display: flex; justify-content: flex-end;"> *@
+    @*             <button class="btn btn-secondary" @onclick="CloseDetails">Close</button> *@
+    @*         </div> *@
+    @*     </div> *@
+    @* } *@
 
     @if (showMainDeletePopup && restaurantToDelete != null)
     {

@@ -11,5 +11,22 @@ namespace EcoMealApp.Data.Repositories
                 .Where(p => p.BusinessID == businessId)
                 .ToListAsync();
         }
+
+        public async Task<Boolean> UpdatePackageQuantityAsync(Package updatedPackage)
+        {
+            var existingPackage = await context.Packages
+                .FirstOrDefaultAsync(p => p.ID == updatedPackage.ID);
+
+            if (existingPackage != null)
+            {
+                return false;
+            }
+            
+            existingPackage.Quantity = updatedPackage.Quantity;
+            
+            var rowsAffected = await context.SaveChangesAsync();
+            
+            return rowsAffected > 0;
+        }
     }
 }

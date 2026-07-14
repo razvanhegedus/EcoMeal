@@ -67,6 +67,20 @@ public class PackageService : IPackageService
             return false;
         }
     }
+
+    public async Task<bool> UpdatePackageQuantityAsync(Package updatedPackage)
+    {
+        try
+        {
+            await _packageRepository.UpdatePackageQuantityAsync(updatedPackage);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating Package Quantity: {ex.Message}");
+            return false;
+        }
+    }
     
     
     public async Task<string?> UploadImageAsync(IFormFile file)

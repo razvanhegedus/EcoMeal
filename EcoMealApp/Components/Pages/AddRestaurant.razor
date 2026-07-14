@@ -1,7 +1,9 @@
 @page "/add-restaurant"
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 @using EcoMealApp.Data.Entities
+@using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
 @inject NavigationManager Navigation
 

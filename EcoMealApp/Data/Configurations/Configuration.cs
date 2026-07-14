@@ -75,6 +75,8 @@ namespace EcoMealApp.Data.Configurations
                 .WithMany(bt => bt.Businesses)
                 .HasForeignKey(b => b.BusinessTypeID)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            
         }
     }
     
@@ -166,6 +168,16 @@ namespace EcoMealApp.Data.Configurations
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            builder.HasIndex(u => u.BusinessId)
+                .IsUnique()
+                .HasFilter("[BusinessId] IS NOT NULL");
+            
+            builder.HasOne(u => u.Business)
+                .WithOne(b => b.User)
+                .HasForeignKey<User>(u => u.BusinessId) 
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -19,4 +19,6 @@ public class Business
     public List<Package> Packages { get; set; } = new List<Package>();
 
     public List<Order> Orders { get; set; } = new List<Order>();
+    
+    public User? User { get; set; }
 }
