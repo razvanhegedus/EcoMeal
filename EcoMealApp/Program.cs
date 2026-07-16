@@ -5,8 +5,7 @@ using EcoMealApp.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using EcoMealApp.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-
-
+using EcoMealApp.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +22,9 @@ builder.Services.AddHttpContextAccessor();
 // 2. Database Context
 builder.Services.AddDbContext<EcoMealDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("EcoMealDb")));
+
+// Register the custom delegating handler
+builder.Services.AddTransient<CookieDelegatingHandler>();
 
 // 3. Application Services & Repositories Registration
 builder.Services.AddScoped<IBusinessService, BusinessService>();
@@ -44,9 +46,21 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllersWithViews().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-// 5. HTTP Client Configuration (You can leave this here if you need to call external APIs, 
-// but remember NOT to use it to call your own internal OrderController anymore!)
-builder.Services.AddScoped(hp => new HttpClient { BaseAddress = new Uri("http://localhost:5029/")});
+// 5. HTTP Client Configuration 
+// 5a. Configure the named client with the Cookie Handler attached
+builder.Services.AddHttpClient("EcoMealApi", client =>
+    {
+        client.BaseAddress = new Uri("http://localhost:5029/");
+    })
+    .AddHttpMessageHandler<CookieDelegatingHandler>();
+
+// 5b. Resolve the default HttpClient injection to use the "EcoMealApi" client configuration.
+// This allows you to keep using '@inject HttpClient Http' in your pages without making changes!
+builder.Services.AddScoped(sp => 
+{
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    return factory.CreateClient("EcoMealApi");
+});
 
 // 6. Cookie Authentication Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -71,7 +85,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddAntiforgery(); // Moved up here with other service registrations
+builder.Services.AddAntiforgery(); 
 
 var app = builder.Build();
 
@@ -89,13 +103,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); 
 app.UseRouting();
 
-// THE ORDER HERE IS CRITICAL
-app.UseAuthentication(); // 1. Who are you?
-app.UseAuthorization();  // 2. Are you allowed in?
-app.UseAntiforgery();    // 3. Is this form submission legitimate?
+app.UseAuthentication(); 
+app.UseAuthorization();  
+app.UseAntiforgery();    
 
 // --- ENDPOINT MAPPINGS ---
-app.MapControllers(); // Removed .DisableAntiforgery() so your login form is secure!
+app.MapControllers(); 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

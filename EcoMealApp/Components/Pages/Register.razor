@@ -1,0 +1,99 @@
+@page "/register" 
+@layout LoginLayout
+
+<PageTitle>Sign Up - EcoMealApp</PageTitle>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">Create Account</h2>
+                        <p class="text-muted">Join EcoMealApp to save delicious food!</p>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Error))
+                    {
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @Error
+                        </div>
+                    }
+
+                    <form action="/api/auth/register" method="post" onsubmit="return validatePasswords()">
+                        <AntiforgeryToken />
+                        
+                        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+                        <input type="hidden" name="role" value="Customer" />
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="John Doe" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="Email" placeholder="name@example.com" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-bold">Password</label>
+                            <input type="password" class="form-control" id="password" name="Password" placeholder="••••••••" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirmPassword" class="form-label fw-bold">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="ConfirmPassword" placeholder="••••••••" required />
+                            <div id="passwordError" class="text-danger small mt-1 d-none">Passwords do not match!</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3">
+                            Sign Up
+                        </button>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">
+                                Already have an account? 
+                                <a href="/login?returnUrl=@ReturnUrl" class="text-primary fw-bold text-decoration-none">Log in</a>
+                            </p>
+                            
+                            <hr class="my-4" />
+                            
+                            <h6 class="mb-1 text-dark fw-bold">Are you a Business Partner?</h6>
+                            <p class="small text-muted mb-3">
+                                To register your restaurant or business with EcoMealApp, please reach out to our administration team.
+                            </p>
+                            <a href="mailto:admin@ecomealapp.com?subject=Business Partner Registration Inquiry" class="btn btn-outline-warning fw-bold w-100">
+                                <i class="bi bi-envelope-fill me-2"></i> Contact Admin
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validatePasswords() {
+        var password = document.getElementById("password").value;
+        var confirmPassword = document.getElementById("confirmPassword").value;
+        var errorText = document.getElementById("passwordError");
+
+        if (password !== confirmPassword) {
+            errorText.classList.remove("d-none");
+            return false; 
+        }
+
+        errorText.classList.add("d-none");
+        return true; 
+    }
+</script>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; } 
+}

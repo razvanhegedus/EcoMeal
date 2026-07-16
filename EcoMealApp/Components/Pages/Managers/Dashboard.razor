@@ -1,0 +1,134 @@
+@page "/manager/dashboard"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "BusinessManager")]
+
+@using EcoMealApp.Models.DTO
+@using EcoMealApp.Models.DTO.BusinessManager
+@using EcoMealApp.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@* 1. INJECT THE SERVICE AND AUTH STATE DIRECTLY INSTEAD OF HTTPCLIENT *@
+@inject IBusinessService BusinessService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Manager Dashboard</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0">Dashboard</h1>
+            <p class="text-muted">Welcome back! Here is today's snapshot.</p>
+        </div>
+        <div>
+            <a href="/manager/orders" class="btn btn-primary shadow-sm">
+                <i class="bi bi-box-seam me-2"></i> View Active Orders
+            </a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading metrics...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+        </div>
+    }
+    else if (stats != null)
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #ffc107 !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Pending Orders</h6>
+                                <h2 class="fw-bold mb-0 text-dark">@stats.PendingOrdersCount</h2>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #0dcaf0 !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Active Packages</h6>
+                                <h2 class="fw-bold mb-0 text-dark">@stats.ActivePackagesCount</h2>
+                            </div>
+                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-box2 text-info" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #198754 !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Today's Revenue</h6>
+                                <h2 class="fw-bold mb-0 text-dark">$@stats.TodaysRevenue.ToString("0.00")</h2>
+                            </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-currency-dollar text-success" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private BusinessStatsDto? stats;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 2. GET THE AUTHENTICATED USER DIRECTLY FROM BLAZOR
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            // 3. EXTRACT THE CLAIM
+            var businessIdClaim = user.FindFirst("BusinessId")?.Value;
+
+            if (!string.IsNullOrEmpty(businessIdClaim) && Guid.TryParse(businessIdClaim, out Guid businessId))
+            {
+                // 4. CALL THE SERVICE DIRECTLY (Bypassing the API controller!)
+                stats = await BusinessService.GetBusinessStatsAsync(businessId);
+            }
+            else
+            {
+                errorMessage = "Your account is not linked to a specific restaurant. Please contact the administrator.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load dashboard metrics.";
+            Console.WriteLine($"Dashboard Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -7,10 +7,12 @@ namespace EcoMealApp.Services;
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly IRepository<Status> _statusRepository;
 
-    public OrderService(IOrderRepository orderRepository)
+    public OrderService(IOrderRepository orderRepository,  IRepository<Status> statusRepository)
     {
         _orderRepository = orderRepository;
+        _statusRepository = statusRepository;
     }
 
     public async Task<List<Order>> GetAllOrdersAsync()
@@ -68,6 +70,43 @@ public class OrderService : IOrderService
         await _orderRepository.DeleteAsync(orderToDelete);
 
         return orderToDelete;
+    }
+    
+    public async Task<List<Order>> GetOrdersByBusinessIdAsync(Guid businessId)
+    {
+        return await _orderRepository.GetOrdersByBusinessIdAsync(businessId);
+    }
+
+    public async Task<bool> UpdateOrderStatusAsync(Guid orderId, Guid newStatusId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null) return false;
+
+        order.StatusID = newStatusId;
+        await _orderRepository.UpdateAsync(order);
+        return true;
+    }
+    
+    public async Task<bool> UpdateOrderStatusByNameAsync(Guid orderId, string statusName)
+    {
+        var targetStatus = await _statusRepository.FirstOrDefaultAsync(s => s.Name == statusName);
+        
+        if (targetStatus == null) 
+        {
+            return false; 
+        }
+
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        
+        if (order == null) 
+        {
+            return false;
+        }
+
+        order.StatusID = targetStatus.ID;
+        await _orderRepository.UpdateAsync(order);
+        
+        return true;
     }
     
 }

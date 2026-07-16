@@ -17,8 +17,8 @@ public class AuthController : ControllerBase
 
     // POST: api/auth/login
     [HttpPost("login")]
-    [ValidateAntiForgeryToken] // Protects against CSRF on form submission
-    public async Task<IActionResult> LoginAsync([FromForm] LoginRequest request, [FromQuery] string? returnUrl)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LoginAsync([FromForm] LoginRequest request, [FromForm] string? returnUrl)
     {
         bool success = await _authService.LoginAsync(request);
 
@@ -27,7 +27,8 @@ public class AuthController : ControllerBase
             return LocalRedirect(returnUrl ?? "/");
         }
 
-        return LocalRedirect($"/account/login?error=Invalid email or password&returnUrl={returnUrl}");
+        // FIX: Redirect to /login (not /account/login) and capitalize 'Error'
+        return LocalRedirect($"/login?Error=Invalid email or password&ReturnUrl={returnUrl}");
     }
 
     // POST: api/auth/register
@@ -37,7 +38,7 @@ public class AuthController : ControllerBase
         [FromForm] RegisterRequest request, 
         [FromForm] string name, 
         [FromForm] string role,
-        [FromQuery] string? returnUrl)
+        [FromForm] string? returnUrl) // FIX: Changed to [FromForm]
     {
         bool success = await _authService.RegisterAsync(request, name, role);
 
@@ -46,15 +47,15 @@ public class AuthController : ControllerBase
             return LocalRedirect(returnUrl ?? "/");
         }
 
-        return LocalRedirect($"/account/register?error=Registration failed. Email might already be in use.&returnUrl={returnUrl}");
+        return LocalRedirect($"/register?Error=Registration failed. Email might already be in use.&ReturnUrl={returnUrl}");
     }
 
     // POST: api/auth/logout
     [HttpPost("logout")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> LogoutAsync([FromQuery] string? returnUrl)
+    public async Task<IActionResult> LogoutAsync([FromForm] string? returnUrl) 
     {
         await _authService.LogoutAsync();
-        return LocalRedirect(returnUrl ?? "/account/login");
+        return LocalRedirect(returnUrl ?? "/login");
     }
 }

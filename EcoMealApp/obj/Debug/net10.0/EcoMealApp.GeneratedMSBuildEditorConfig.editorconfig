@@ -75,6 +75,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dpbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/Managers/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NYW5hZ2Vycy9EYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/Managers/ManageOrders.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NYW5hZ2Vycy9NYW5hZ2VPcmRlcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/NotFound.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -83,8 +91,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9PcmRlclN1Y2Nlcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZWdpc3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/Users.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Vc2Vycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/Pages/ViewOrders.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9WaWV3T3JkZXJzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/Components/RedirectToLogin.razor]

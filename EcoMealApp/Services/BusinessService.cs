@@ -1,17 +1,22 @@
 using EcoMealApp.Data.Entities;
-using EcoMealApp.Data.Repositories; 
+using EcoMealApp.Data.Repositories;
+using EcoMealApp.Models.DTO.BusinessManager;
 
 namespace EcoMealApp.Services;
 
 public class BusinessService : IBusinessService
 {
     private readonly IBusinessRepository _businessRepository;
+    private readonly IOrderRepository _orderRepository;
+    private readonly IPackageRepository _packageRepository;
     private readonly IWebHostEnvironment _environment;
 
-    public BusinessService(IBusinessRepository businessRepository, IWebHostEnvironment environment)
+    public BusinessService(IBusinessRepository businessRepository, IWebHostEnvironment environment,  IOrderRepository orderRepository, IPackageRepository packageRepository)
     {
         _businessRepository = businessRepository;
         _environment = environment;
+        _orderRepository = orderRepository;
+        _packageRepository = packageRepository;
     }
 
     public async Task<List<Business>> GetAllBusinessesAsync()
@@ -84,5 +89,24 @@ public class BusinessService : IBusinessService
         }
 
         return $"/images/{uniqueFileName}";
+    }
+    
+    public async Task<BusinessStatsDto> GetBusinessStatsAsync(Guid businessId)
+    {
+    
+        var allOrders = await _orderRepository.GetAllAsync();
+        var businessOrders = allOrders.Where(o => o.BusinessID == businessId).ToList();
+
+        var allPackages = await _packageRepository.GetAllAsync();
+        var activePackages = allPackages.Where(p => p.BusinessID == businessId && p.Quantity > 0).ToList();
+
+        var pendingStatusId = Guid.Parse("33333333-3333-3333-3333-333333333333"); 
+    
+        return new BusinessStatsDto
+        {
+            PendingOrdersCount = businessOrders.Count(o => o.StatusID == pendingStatusId),
+            ActivePackagesCount = activePackages.Count,
+            TodaysRevenue = 0.0 
+        };
     }
 }

@@ -10,5 +10,9 @@ public interface IOrderService
     Task<List<Order>> GetAllOrdersAsync();
     Task<Order?> CreateMultiPackageOrderAsync(Guid businessId, Guid userId, List<OrderPackageDto> packages);
     Task<Order?> GetOrderByIdAsync(Guid id);
-    
+    Task<List<Order>> GetOrdersByBusinessIdAsync(Guid businessId);
+    Task<bool> UpdateOrderStatusAsync(Guid orderId, Guid newStatusId);
+    Task<bool> UpdateOrderStatusByNameAsync(Guid orderId, string statusName);
+
+
 }

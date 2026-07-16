@@ -41,7 +41,7 @@ namespace EcoMealApp.Data.Configurations
             builder.HasOne(op => op.Order)
                 .WithMany(p => p.OrderPackages)
                 .HasForeignKey(op => op.OrderID)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
             
             builder.HasOne(op => op.Package)
                 .WithMany(p => p.OrderPackages)

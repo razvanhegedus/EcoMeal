@@ -1,8 +1,10 @@
 using EcoMealApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoMealApp.Controllers;
 
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class RoleController : ControllerBase

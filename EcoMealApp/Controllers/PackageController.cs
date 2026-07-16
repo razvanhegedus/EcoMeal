@@ -1,9 +1,11 @@
 using EcoMealApp.Data.Entities;
 using EcoMealApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoMealApp.Controllers;
 
+[Authorize]
 [Route("api/[controller]")] //api/package
 [ApiController]
 public class PackageController : ControllerBase
@@ -42,12 +44,14 @@ public class PackageController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,BusinessManager")]
     public async Task<IActionResult> CreatePackage([FromBody] Package package)
     {
         return Ok(await _packageService.CreatePackageAsync(package));
     }
     
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,BusinessManager")]
     public async Task<IActionResult> DeletePackage(Guid id)
     {
         var deletedPackage = await _packageService.DeletePackageAsync(id);
@@ -59,6 +63,7 @@ public class PackageController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,BusinessManager")]
     public async Task<IActionResult> UpdatePackageAsync(Guid id, Package package)
     {
         if (id != package.ID)
@@ -76,6 +81,7 @@ public class PackageController : ControllerBase
     }
 
     [HttpPatch("{id}")]
+    [Authorize(Roles = "Admin,BusinessManager")]
     public async Task<IActionResult> UpdatePackageQuantityAsync(Guid id, Package package)
     {
         if (id != package.ID)

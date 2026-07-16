@@ -19,6 +19,20 @@ namespace EcoMealApp.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        public async Task<User?> ValidateUserCredentialsAsync(string email, string password)
+        {
+            var user = await _context.Users
+                .Include(u => u.Role) 
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
+            {
+                return user; 
+            }
+
+            return null; 
+        }
+        
         public async Task<bool> LoginAsync(LoginRequest request)
         {
             var user = await _context.Users
@@ -75,6 +89,10 @@ namespace EcoMealApp.Services
             var context = _httpContextAccessor.HttpContext;
             if (context == null) return false;
 
+            Console.WriteLine($"\n[AUTH DEBUG] Logging in user: {user.Email}");
+            Console.WriteLine($"[AUTH DEBUG] Role is: {user.Role?.Name}");
+            Console.WriteLine($"[AUTH DEBUG] BusinessId in memory is: {(user.BusinessId.HasValue ? user.BusinessId.ToString() : "NULL!")}\n");
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
@@ -82,6 +100,11 @@ namespace EcoMealApp.Services
                 new Claim(ClaimTypes.Email, user.Email ?? ""),
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? "Customer")
             };
+            
+            if (user.BusinessId.HasValue)
+            {
+                claims.Add(new Claim("BusinessId", user.BusinessId.Value.ToString()));
+            }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

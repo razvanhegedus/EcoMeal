@@ -1,9 +1,11 @@
 using EcoMealApp.Data.Entities;
 using EcoMealApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoMealApp.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
@@ -52,6 +54,7 @@ public class UserController : ControllerBase
     }
 
     // POST: api/user
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<User>> CreateUser([FromBody] User newUser)
     {
@@ -66,6 +69,7 @@ public class UserController : ControllerBase
     }
 
     // PUT: api/user/5
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User updatedUser)
     {
@@ -96,6 +100,7 @@ public class UserController : ControllerBase
 
     // DELETE: api/user/5
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
         var success = await _userService.DeleteUserAsync(id);

@@ -220,7 +220,7 @@ namespace EcoMealApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BusinessId")
+                    b.Property<Guid?>("BusinessId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -297,7 +297,7 @@ namespace EcoMealApp.Migrations
                     b.HasOne("EcoMealApp.Data.Entities.Order", "Order")
                         .WithMany("OrderPackages")
                         .HasForeignKey("OrderID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("EcoMealApp.Data.Entities.Package", "Package")

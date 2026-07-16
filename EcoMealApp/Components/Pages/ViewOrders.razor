@@ -1,0 +1,159 @@
+@page "/orders"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+@using EcoMealApp.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+
+<PageTitle>Order Management</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>All Orders</h1>
+        @* Notice: No "Add Order" button here! *@
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;"></th>
+                        <th>Order #</th>
+                        <th>System ID</th>
+                        <th>Business ID</th>
+                        <th>User ID</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var o in orders)
+                    {
+                        <tr>
+                            <td>
+                                <div class="rounded-circle bg-light text-success d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                                    <i class="bi bi-receipt" style="font-size: 1.2rem;"></i>
+                                </div>
+                            </td>
+                            <td class="fw-bold">@o.OrderNumber</td>
+                            <td class="text-muted small font-monospace">@o.ID</td>
+                            <td class="text-muted small font-monospace">@o.BusinessID</td>
+                            <td class="text-muted small font-monospace">@o.UserID</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeletePopup(o)">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!orders.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No orders found in the system.</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showDeletePopup && orderToDelete != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body p-4 text-center">
+                    <i class="bi bi-exclamation-circle text-danger mb-3" style="font-size: 3rem;"></i>
+                    <h4 class="text-danger fw-bold mb-2">Delete Order</h4>
+                    <p class="text-muted mb-4">Are you sure you want to permanently delete Order <strong>#@orderToDelete.OrderNumber</strong>? This action cannot be undone.</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-light w-50" @onclick="CancelDelete">Cancel</button>
+                        <button class="btn btn-danger w-50" @onclick="ConfirmDelete">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Order> orders = new();
+    private Order? orderToDelete;
+    private bool showDeletePopup = false;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            isLoading = true;
+            orders = await Http.GetFromJsonAsync<List<Order>>("api/order") ?? new List<Order>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading orders: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenDeletePopup(Order order)
+    {
+        orderToDelete = order;
+        showDeletePopup = true;
+    }
+
+    private void CancelDelete()
+    {
+        orderToDelete = null;
+        showDeletePopup = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (orderToDelete == null) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/order/{orderToDelete.ID}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                orders.Remove(orderToDelete);
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete order. Status Code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting order: {ex.Message}");
+        }
+        finally
+        {
+            CancelDelete();
+        }
+    }
+}

@@ -1,0 +1,238 @@
+@page "/manager/orders"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "BusinessManager")]
+
+@using EcoMealApp.Data.Entities
+@using EcoMealApp.Services
+@using EcoMealApp.Constants
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IOrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Manage Orders</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0">Active Orders</h1>
+            <p class="text-muted">Manage status changes and monitor incoming requests.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading orders...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;"></th>
+                        <th>Order Number</th>
+                        <th>Customer ID</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var o in orders)
+                    {
+                        <tr>
+                            <td>
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                                    <i class="bi bi-receipt" style="font-size: 1.1rem;"></i>
+                                </div>
+                            </td>
+                            <td class="fw-bold">Order #@o.OrderNumber</td>
+                            <td class="text-muted small font-monospace">@o.UserID.ToString().Substring(0, 8)...</td>
+                            
+                            <td>
+                                @if (o.Status?.Name == StatusConstants.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark border">Pending</span>
+                                }
+                                else if (o.Status?.Name == StatusConstants.Accepted)
+                                {
+                                    <span class="badge bg-info text-dark border">In Kitchen</span>
+                                }
+                                else if (o.Status?.Name == StatusConstants.ReadyForPickup)
+                                {
+                                    <span class="badge bg-primary border">Ready for Pickup</span>
+                                }
+                                else if (o.Status?.Name == StatusConstants.Completed)
+                                {
+                                    <span class="badge bg-success border">Completed</span>
+                                }
+                                else if (o.Status?.Name == StatusConstants.Rejected)
+                                {
+                                    <span class="badge bg-danger border">Rejected</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-dark border text-danger fw-bold">
+                                        DEBUG: '@(o.Status?.Name ?? "NULL")'
+                                    </span>
+                                }
+                            </td>
+                            
+                            <td class="text-end">
+                                @if (o.Status?.Name == StatusConstants.Pending)
+                                {
+                                    <button class="btn btn-sm btn-outline-success me-2" @onclick="() => UpdateStatus(o.ID, StatusConstants.Accepted)">
+                                        <i class="bi bi-check-lg"></i> Accept
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenRejectPopup(o)">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                }
+                                else if (o.Status?.Name == StatusConstants.Accepted)
+                                {
+                                    <button class="btn btn-sm btn-primary" @onclick="() => UpdateStatus(o.ID, StatusConstants.ReadyForPickup)">
+                                        <i class="bi bi-box-seam"></i> Mark Ready
+                                    </button>
+                                }
+                                else if (o.Status?.Name == StatusConstants.ReadyForPickup)
+                                {
+                                    <button class="btn btn-sm btn-success" @onclick="() => UpdateStatus(o.ID, StatusConstants.Completed)">
+                                        <i class="bi bi-check2-all"></i> Complete
+                                    </button>
+                                }
+                                else if (o.Status?.Name == StatusConstants.Completed || o.Status?.Name == StatusConstants.Rejected)
+                                {
+                                    <span class="text-muted small">No action required</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger small fw-bold">
+                                        DEBUG: '@(o.Status?.Name ?? "NULL")'
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!orders.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No orders found for your business.</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showRejectPopup && orderToReject != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" @onclick="CancelReject">
+        <div class="modal-dialog modal-dialog-centered modal-sm" @onclick:stopPropagation>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle-fill text-danger mb-3" style="font-size: 3rem;"></i>
+                    <h4 class="text-danger fw-bold mb-2">Reject Order</h4>
+                    <p class="text-muted mb-4">Are you sure you want to reject Order <strong>#@orderToReject.OrderNumber</strong>?</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-light w-50" @onclick="CancelReject">Cancel</button>
+                        <button class="btn btn-danger w-50" @onclick="ConfirmReject">Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Order> orders = new();
+    private Order? orderToReject;
+    private bool showRejectPopup = false;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private Guid currentBusinessId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrdersAsync();
+    }
+
+    private async Task LoadOrdersAsync()
+    {
+        try
+        {
+            isLoading = true;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var businessIdClaim = user.FindFirst("BusinessId")?.Value;
+
+            if (!string.IsNullOrEmpty(businessIdClaim) && Guid.TryParse(businessIdClaim, out currentBusinessId))
+            {
+                orders = await OrderService.GetOrdersByBusinessIdAsync(currentBusinessId);
+            }
+            else
+            {
+                errorMessage = "Your account is not linked to any active business profile.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load orders list.";
+            Console.WriteLine($"Error loading orders: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task UpdateStatus(Guid orderId, string newStatus)
+    {
+        try
+        {
+            var success = await OrderService.UpdateOrderStatusByNameAsync(orderId, newStatus);
+            if (success)
+            {
+                await LoadOrdersAsync(); 
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating status: {ex.Message}");
+        }
+    }
+
+    private void OpenRejectPopup(Order order)
+    {
+        orderToReject = order;
+        showRejectPopup = true;
+    }
+
+    private void CancelReject()
+    {
+        orderToReject = null;
+        showRejectPopup = false;
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (orderToReject == null) return;
+        
+        await UpdateStatus(orderToReject.ID, StatusConstants.Rejected);
+        CancelReject();
+    }
+}

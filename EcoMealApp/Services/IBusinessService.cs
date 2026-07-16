@@ -1,4 +1,5 @@
 using EcoMealApp.Data.Entities;
+using EcoMealApp.Models.DTO.BusinessManager;
 
 namespace EcoMealApp.Services;
 
@@ -10,4 +11,5 @@ public interface IBusinessService
     Task<bool> UpdateBusinessAsync(Business updatedBusiness);
     Task<Business> GetBusinessAsync(Guid id);
     Task<string?> UploadImageAsync(IFormFile file);
+    Task<BusinessStatsDto> GetBusinessStatsAsync(Guid businessId);
 }
