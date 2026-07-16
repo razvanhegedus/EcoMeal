@@ -4,15 +4,20 @@
 
 @using EcoMealApp.Data.Entities
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject HttpClient Http
 
 <PageTitle>Restaurants</PageTitle>
 
 <h1>Restaurants</h1>
 
-<a href="/add-restaurant" class="btn btn-success mb-4" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
-    + Add New Restaurant
-</a>
+@if (IsAdmin)
+{
+    <a href="/add-restaurant" class="btn btn-success mb-4" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+        + Add New Restaurant
+    </a>
+}
 
 @if (businesses == null)
 {
@@ -39,63 +44,22 @@ else
                             View Packages
                         </a>
                         
-                        <a href="/edit-restaurant/@restaurant.ID" class="btn btn-secondary w-100">
-                            Edit
-                        </a>
+                        @* Using a fast C# variable instead of nested AuthorizeViews *@
+                        @if (IsAdmin)
+                        {
+                            <a href="/edit-restaurant/@restaurant.ID" class="btn btn-secondary w-100">
+                                Edit
+                            </a>
 
-                        <button class="btn btn-danger w-100" @onclick="() => OpenMainDeletePopup(restaurant)">
-                            Delete
-                        </button>
+                            <button class="btn btn-danger w-100" @onclick="() => OpenMainDeletePopup(restaurant)">
+                                Delete
+                            </button>
+                        }
                     </div>
-                    
-
                 </div>
             </div>
         }
     </div>
-    
-
-    @* @if (selectedBusiness != null) *@
-    @* { *@
-    @*     <div id="fade" class="black_overlay" @onclick="CloseDetails"></div> *@
-    @*      *@
-    @*     <div id="light" class="white_content"> *@
-    @*         <h2>@selectedBusiness.Name</h2> *@
-    @*         <p><strong>Category:</strong> @selectedBusiness.BusinessType?.Name</p> *@
-    @*         <img src="@(string.IsNullOrEmpty(selectedBusiness.ImageURL) ? "default_restaurant.png" : selectedBusiness.ImageURL)" alt="@selectedBusiness.Name" style="max-height: 150px; border-radius: 8px;" /> *@
-    @*          *@
-    @*         <hr style="margin: 20px 0;" /> *@
-    @*         <h4>Available Packages</h4> *@
-    @*          *@
-    @*         @if (isLoadingPackages) *@
-    @*         { *@
-    @*             <p><em>Loading packages...</em></p> *@
-    @*         } *@
-    @*         else if (modalPackages != null && modalPackages.Any()) *@
-    @*         { *@
-    @*             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"> *@
-    @*                 @foreach (var package in modalPackages)  *@
-    @*                 { *@
-    @*                     <div style="border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #f9f9f9;"> *@
-    @*                         <h5 style="margin: 0;">@package.Name</h5> *@
-    @*                         <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">@package.Description</p> *@
-    @*                         <span style="font-weight: bold; color: #28a745;">$@package.Price</span> *@
-    @*                     </div> *@
-    @*                 } *@
-    @*             </div> *@
-    @*         } *@
-    @*         else *@
-    @*         { *@
-    @*             <p style="color: #888; font-style: italic;">No packages currently available.</p> *@
-    @*         } *@
-    @*          *@
-    @*         <hr style="margin: 20px 0;" /> *@
-    @* *@
-    @*         <div style="display: flex; justify-content: flex-end;"> *@
-    @*             <button class="btn btn-secondary" @onclick="CloseDetails">Close</button> *@
-    @*         </div> *@
-    @*     </div> *@
-    @* } *@
 
     @if (showMainDeletePopup && restaurantToDelete != null)
     {
@@ -114,8 +78,11 @@ else
     }
 }
 
-
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool IsAdmin { get; set; } = false;
     private List<Business>? businesses;
     
     // --- View Details Modal State ---
@@ -128,6 +95,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (AuthState != null)
+        {
+            var authState = await AuthState;
+            var user = authState.User;
+
+            IsAdmin = user.IsInRole("Admin");
+        }
+
+        // 2. Fetch API data
         businesses = await Http.GetFromJsonAsync<List<Business>>("api/business");
     }
 

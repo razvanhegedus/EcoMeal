@@ -1,0 +1,28 @@
+
+.hero-section {
+    background: linear-gradient(135deg, rgb(5, 39, 103) 0%, #3a0647 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #3a0647 100%) !important;
+    border: none !important;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    opacity: 0.95;
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, rgb(5, 39, 103) 0%, #3a0647 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.card-title {
+    color: rgb(5, 39, 103);
+}

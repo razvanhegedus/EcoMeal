@@ -6,10 +6,15 @@
 
 main[b-yiqvmle1rg] {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents wide content from pushing off-screen */
 }
 
 .sidebar[b-yiqvmle1rg] {
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    transition: width 0.3s ease;
+    overflow-x: hidden;
 }
 
 .top-row[b-yiqvmle1rg] {
@@ -21,20 +26,20 @@ main[b-yiqvmle1rg] {
     align-items: center;
 }
 
-    .top-row[b-yiqvmle1rg]  a, .top-row[b-yiqvmle1rg]  .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
+.top-row[b-yiqvmle1rg]  a, .top-row[b-yiqvmle1rg]  .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+    text-decoration: none;
+}
 
-    .top-row[b-yiqvmle1rg]  a:hover, .top-row[b-yiqvmle1rg]  .btn-link:hover {
-        text-decoration: underline;
-    }
+.top-row[b-yiqvmle1rg]  a:hover, .top-row[b-yiqvmle1rg]  .btn-link:hover {
+    text-decoration: underline;
+}
 
-    .top-row[b-yiqvmle1rg]  a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.top-row[b-yiqvmle1rg]  a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 @media (max-width: 640.98px) {
     .top-row[b-yiqvmle1rg] {
@@ -58,6 +63,9 @@ main[b-yiqvmle1rg] {
         top: 0;
     }
 
+    .page.collapsed .sidebar[b-yiqvmle1rg] {
+        width: 0;
+    }
     .top-row[b-yiqvmle1rg] {
         position: sticky;
         top: 0;
@@ -90,9 +98,9 @@ main[b-yiqvmle1rg] {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss[b-yiqvmle1rg] {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss[b-yiqvmle1rg] {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

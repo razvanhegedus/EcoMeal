@@ -11,7 +11,6 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>All Orders</h1>
-        @* Notice: No "Add Order" button here! *@
     </div>
 
     @if (isLoading)
@@ -31,9 +30,9 @@
                     <tr>
                         <th style="width: 50px;"></th>
                         <th>Order #</th>
-                        <th>System ID</th>
-                        <th>Business ID</th>
-                        <th>User ID</th>
+                        <th>Business</th>
+                        <th>Customer</th>
+                        <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
                     </thead>
@@ -47,10 +46,18 @@
                                 </div>
                             </td>
                             <td class="fw-bold">@o.OrderNumber</td>
-                            <td class="text-muted small font-monospace">@o.ID</td>
-                            <td class="text-muted small font-monospace">@o.BusinessID</td>
-                            <td class="text-muted small font-monospace">@o.UserID</td>
+                            
+                            <td class="fw-medium">@(o.Business?.Name ?? "Unknown Business")</td>
+                            <td>@(o.User?.Name ?? "Unknown User")</td>
+                            
+                            <td>
+                                <span class="badge bg-primary">@(o.Status?.Name ?? "Pending")</span>
+                            </td>
+                            
                             <td class="text-end">
+                                <button class="btn btn-sm btn-outline-info me-2" @onclick="() => OpenPackagesPopup(o)">
+                                    <i class="bi bi-box-seam"></i> Packages
+                                </button>
                                 <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeletePopup(o)">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
@@ -70,6 +77,54 @@
     }
 </div>
 
+@* --- PACKAGES MODAL --- *@
+@if (showPackagesPopup && orderToView != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 bg-light">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-box-seam text-primary me-2"></i> 
+                        Packages for Order #@orderToView.OrderNumber
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="ClosePackagesPopup"></button>
+                </div>
+                <div class="modal-body p-4">
+                    @if (orderToView.OrderPackages != null && orderToView.OrderPackages.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var package in orderToView.OrderPackages)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <span class="fw-bold d-block">Package:</span>
+                                        <span class="text-muted">@(package.Package?.Name ?? "Unknown Package")</span>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill px-3 py-2">
+                                        Qty: @package.Quantity
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted my-3">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No packages found for this order.
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-secondary" @onclick="ClosePackagesPopup">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- DELETE MODAL --- *@
 @if (showDeletePopup && orderToDelete != null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -92,8 +147,14 @@
 
 @code {
     private List<Order> orders = new();
+    
+    // Popup state management
     private Order? orderToDelete;
     private bool showDeletePopup = false;
+    
+    private Order? orderToView;
+    private bool showPackagesPopup = false;
+    
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -106,6 +167,7 @@
         try
         {
             isLoading = true;
+            // Because of the backend changes, this API call will now return the nested objects too!
             orders = await Http.GetFromJsonAsync<List<Order>>("api/order") ?? new List<Order>();
         }
         catch (Exception ex)
@@ -118,6 +180,20 @@
         }
     }
 
+    // --- Packages Popup Logic ---
+    private void OpenPackagesPopup(Order order)
+    {
+        orderToView = order;
+        showPackagesPopup = true;
+    }
+
+    private void ClosePackagesPopup()
+    {
+        orderToView = null;
+        showPackagesPopup = false;
+    }
+
+    // --- Delete Popup Logic ---
     private void OpenDeletePopup(Order order)
     {
         orderToDelete = order;

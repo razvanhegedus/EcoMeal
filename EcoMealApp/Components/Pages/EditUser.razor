@@ -52,16 +52,20 @@ else
             </InputSelect>
         </div>
 
-        <div class="form-group mb-4" style="max-width: 500px;">
-            <label for="business" class="form-label">Assigned Business (Optional)</label>
-            <InputSelect id="business" @bind-Value="editUser.BusinessId" class="form-select">
-                <option value="">-- None --</option>
-                @foreach (var business in businesses)
-                {
-                    <option value="@business.ID">@business.Name</option>
-                }
-            </InputSelect>
-        </div>
+        @* Only show the Business Dropdown if the selected role is Business Manager *@
+        @if (IsBusinessManager)
+        {
+            <div class="form-group mb-4" style="max-width: 500px;">
+                <label for="business" class="form-label">Assigned Business</label>
+                <InputSelect id="business" @bind-Value="editUser.BusinessId" class="form-select">
+                    <option value="">-- Select a Business --</option>
+                    @foreach (var business in businesses)
+                    {
+                        <option value="@business.ID">@business.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        }
 
         <button type="submit" class="btn btn-success">Save Changes</button>
         <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
@@ -73,11 +77,14 @@ else
     public Guid id { get; set; }
 
     private User? editUser;
-    private string newPassword = string.Empty; // Holds the new password if the admin decides to change it
+    private string newPassword = string.Empty; 
     
     private List<Role> roles = new();
     private List<Business> businesses = new();
     private string? errorMessage;
+
+    private bool IsBusinessManager => 
+        roles.FirstOrDefault(r => r.ID == editUser?.RoleId)?.Name == "BusinessManager";
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,7 +117,17 @@ else
             return;
         }
 
-        // If a new password was typed, update the entity before sending to the API
+        if (IsBusinessManager && (editUser.BusinessId == null || editUser.BusinessId.ToString() == string.Empty))
+        {
+            errorMessage = "A Business Manager must be assigned to a specific business.";
+            return;
+        }
+        // Logic Check: If they are NOT a Business Manager, wipe the business ID clean
+        else if (!IsBusinessManager)
+        {
+            editUser.BusinessId = null;
+        }
+
         if (!string.IsNullOrWhiteSpace(newPassword))
         {
             editUser.Password = newPassword;

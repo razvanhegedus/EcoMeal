@@ -17,7 +17,7 @@ public class OrderService : IOrderService
 
     public async Task<List<Order>> GetAllOrdersAsync()
     {
-        return await _orderRepository.GetAllAsync();
+        return await _orderRepository.GetAllOrdersWithDetailsAsync();
     }
 
     public async Task<Order?> GetOrderByIdAsync(Guid id)

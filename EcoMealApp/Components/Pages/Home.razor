@@ -1,28 +1,28 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <PageTitle>EcoMeal - Home</PageTitle>
 
 <div class="container mt-4 mb-5">
-    <div class="hero-section text-center p-5 rounded-4 shadow-sm mb-5"
-         style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 1px solid #BBF246;">
+    <div class="hero-section text-center p-5 rounded-4 shadow mb-5">
         <div class="py-4">
             <img src="images/logo.png" alt="EcoMeal - Reduce Waste | Save Food | Eat Fresh" class="img-fluid mb-4"
                  style="max-height: 240px; object-fit: contain;" />
 
-            <h1 class="display-6 fw-bold text-dark mb-3">
-                Saving fresh food, protecting the planet 🌿
+            <h1 class="display-6 fw-bold mb-3 text-white">
+                Saving fresh food, protecting the planet 🌍
             </h1>
 
-            <p class="lead text-muted mx-auto mb-4" style="max-width: 650px;">
+            <p class="lead mx-auto mb-4 text-white-50" style="max-width: 650px;">
                 Discover surprise bags filled with delicious food from your favorite restaurants, bakeries, and
                 supermarkets at discounted prices at the end of the day!
             </p>
 
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="restaurants" class="btn btn-primary btn-lg px-4 shadow-sm">
+                <a href="restaurants" class="btn btn-primary btn-lg px-4 shadow">
                     <i class="bi bi-bag-heart me-2"></i> Browse Available Packages
                 </a>
-                
             </div>
         </div>
     </div>
@@ -30,33 +30,34 @@
     <div class="row g-4 text-center mt-2">
         <div class="col-md-4">
             <div class="card h-100 p-4 border-0 bg-transparent shadow-none">
-                <div class="text-success mb-3" style="font-size: 2.5rem;">
+                <div class="feature-icon mb-3">
                     <i class="bi bi-percent"></i>
                 </div>
-                <h4 class="fw-bold">Great Discounts</h4>
+                <h4 class="fw-bold card-title">Great Discounts</h4>
                 <p class="text-muted">Buy fresh, perfectly good food at significant discounts while saving money on your
                     daily meals.</p>
-                </div>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 border-0 bg-transparent shadow-none">
-                    <div class="text-success mb-3" style="font-size: 2.5rem;">
-                        <i class="bi bi-globe-americas"></i>
-                    </div>
-                    <h4 class="fw-bold">Zero Waste</h4>
-                    <p class="text-muted">Every package rescued from being thrown away means less food waste and a lower
-                        carbon footprint.</p>
-                    </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0 bg-transparent shadow-none">
+                <div class="feature-icon mb-3">
+                    <i class="bi bi-globe-americas"></i>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 p-4 border-0 bg-transparent shadow-none">
-                        <div class="text-success mb-3" style="font-size: 2.5rem;">
-                            <i class="bi bi-heart-fill"></i>
-                        </div>
-                        <h4 class="fw-bold">Support Local</h4>
-                        <p class="text-muted">Help local vendors optimize their production and
-                            prevent good food from going to waste.</p>
-                        </div>
-                    </div>
-                </div>
+                <h4 class="fw-bold card-title">Zero Waste</h4>
+                <p class="text-muted">Every package rescued from being thrown away means less food waste and a lower
+                    carbon footprint.</p>
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 border-0 bg-transparent shadow-none">
+                <div class="feature-icon mb-3">
+                    <i class="bi bi-heart-fill"></i>
+                </div>
+                <h4 class="fw-bold card-title">Support Local</h4>
+                <p class="text-muted">Help local vendors optimize their production and
+                    prevent good food from going to waste.</p>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -36,7 +36,7 @@
                         <th style="width: 50px;"></th>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Role ID</th>
+                        <th>Role</th>
                         <th class="text-end">Actions</th>
                     </tr>
                     </thead>
@@ -53,7 +53,7 @@
                             <td class="text-muted">@u.Email</td>
                             <td>
                                 <span class="badge bg-light text-secondary border" style="font-family: monospace;">
-                                    @u.RoleId
+                                    @u.Role?.Name
                                 </span>
                             </td>
                             <td class="text-end">

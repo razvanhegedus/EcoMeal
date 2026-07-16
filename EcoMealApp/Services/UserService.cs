@@ -6,21 +6,21 @@ namespace EcoMealApp.Services;
 
 public class UserService : IUserService
 {
-    private readonly IRepository<User> _userRepository;
+    private readonly IUserRepository _userRepository;
 
-    public UserService(IRepository<User> userRepository)
+    public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
     }
 
     public async Task<List<User>> GetAllUsersAsync()
     {
-        return await _userRepository.GetAllAsync();
+        return await _userRepository.GetAllUsersWithRolesAsync();
     }
 
     public async Task<User?> GetUserByIdAsync(Guid id)
     {
-        return await _userRepository.GetByIdAsync(id);
+        return await _userRepository.GetUserWithRoleByIdAsync(id);
     }
 
     public async Task<User?> GetUserByEmailAsync(string email)

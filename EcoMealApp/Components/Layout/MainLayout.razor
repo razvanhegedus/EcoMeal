@@ -2,23 +2,23 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 
-<div class="page">
+<div class="page @(isSidebarCollapsed ? "collapsed" : "")">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu IsCollapsed="isSidebarCollapsed" />
     </div>
 
     <main>
         <div class="top-row px-4 d-flex justify-content-between align-items-center">
             
-            <div></div> 
+            <div>
+                <button class="btn btn-link text-dark p-0 d-none d-sm-inline-block" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+            </div> 
 
             <div class="d-flex align-items-center gap-3">
                 <AuthorizeView>
                     <Authorized Context="authContext">
-                        <span class="text-success fw-bold d-flex align-items-center gap-1">
-                            <span style="font-size: 0.75rem;">🟢</span> Connected
-                        </span>
-
                         <span class="badge bg-primary text-white px-2 py-1">
                             @(authContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown Role")
                         </span>
@@ -38,8 +38,6 @@
                         <a href="/login" class="nav-link" data-enhance="false">Login</a>
                     </NotAuthorized>
                 </AuthorizeView>
-
-                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank" class="ms-2">About</a>
             </div>
         </div>
 
@@ -48,3 +46,18 @@
         </article>
     </main>
 </div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool isSidebarCollapsed = false;
+
+    private void ToggleSidebar()
+    {
+        isSidebarCollapsed = !isSidebarCollapsed;
+    }
+}

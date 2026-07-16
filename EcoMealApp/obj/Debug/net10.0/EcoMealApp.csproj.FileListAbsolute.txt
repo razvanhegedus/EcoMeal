@@ -213,5 +213,6 @@
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Packages.razor.rz.scp.css
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/bin/Debug/net10.0/BCrypt-Net-Next.dll
 /Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/OrderPage.razor.rz.scp.css
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-s8515elfpy-s8515elfpy.gz
-/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-s8515elfpy-s8515elfpy.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/scopedcss/Components/Pages/Home.razor.rz.scp.css
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/zigp2u8gqu-{0}-g3t2mcuy5m-g3t2mcuy5m.gz
+/Users/hegedusrazvan/RiderProjects/EcoMealApp/EcoMealApp/obj/Debug/net10.0/compressed/5vshq1bhvu-{0}-g3t2mcuy5m-g3t2mcuy5m.gz

@@ -78,21 +78,18 @@ public class UserController : ControllerBase
             return BadRequest("User ID mismatch or data is missing.");
         }
 
-        // 1. Fetch the user (EF Core starts tracking this specific instance)
         var existingUser = await _userService.GetUserByIdAsync(id);
         if (existingUser == null)
         {
             return NotFound($"User with ID {id} not found.");
         }
 
-        // 2. Map the new values onto the ALREADY TRACKED instance
         existingUser.Name = updatedUser.Name;
         existingUser.Email = updatedUser.Email;
         existingUser.RoleId = updatedUser.RoleId;
         existingUser.BusinessId = updatedUser.BusinessId;
         existingUser.Password = updatedUser.Password;
 
-        // 3. Pass the tracked instance to your service to save
         await _userService.UpdateUserAsync(existingUser);
     
         return NoContent();
