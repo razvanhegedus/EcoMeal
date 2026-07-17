@@ -167,7 +167,6 @@
         try
         {
             isLoading = true;
-            // Because of the backend changes, this API call will now return the nested objects too!
             orders = await Http.GetFromJsonAsync<List<Order>>("api/order") ?? new List<Order>();
         }
         catch (Exception ex)

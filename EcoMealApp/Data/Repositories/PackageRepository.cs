@@ -17,7 +17,7 @@ namespace EcoMealApp.Data.Repositories
             var existingPackage = await context.Packages
                 .FirstOrDefaultAsync(p => p.ID == updatedPackage.ID);
 
-            if (existingPackage != null)
+            if (existingPackage == null)
             {
                 return false;
             }

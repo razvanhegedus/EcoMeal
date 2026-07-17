@@ -1,134 +1,119 @@
 using EcoMealApp.Models.DTO;
 using EcoMealApp.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using EcoMealApp.Models.DTO.BusinessManager;
 
-namespace EcoMealApp.Controllers
+namespace EcoMealApp.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class OrderController : ControllerBase
 {
-    [Authorize]
-    [Route("api/order")]
-    [ApiController] 
-    public class OrderController : ControllerBase
+    private readonly IOrderService _orderService;
+
+    public OrderController(IOrderService orderService)
     {
-        private readonly IOrderService _orderService;
+        _orderService = orderService;
+    }
 
-        public OrderController(IOrderService orderService)
+    [HttpGet]
+    public async Task<IActionResult> GetOrders()
+    {
+        var orders = await _orderService.GetAllOrdersAsync();
+        return Ok(orders);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
+    {
+        if (request == null || !request.Packages.Any())
         {
-            _orderService = orderService;
-        }
-        
-        // POST: api/order
-        [HttpPost]
-        [Authorize(Roles = "Customer, Admin")]
-        public async Task<IActionResult> PlaceOrder([FromBody] CreateOrderRequest request)
-        {
-            Guid userId = request.UserId; 
-    
-            if (userId == Guid.Empty)
-            {
-                return Unauthorized("User ID is missing or invalid.");
-            }
-
-            if (request.Packages == null || !request.Packages.Any())
-            {
-                return BadRequest("You must select at least one package to place an order.");
-            }
-
-            var result = await _orderService.CreateMultiPackageOrderAsync(request.BusinessId, userId, request.Packages);
-
-            if (result == null)
-            {
-                return StatusCode(500, "Failed to create order in the database.");
-            }
-
-            return Ok(result);
+            return BadRequest("Invalid order request.");
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrderById(Guid id)
+        try
         {
-            var order = await _orderService.GetOrderByIdAsync(id);
+            // Call the newly updated service method
+            var order = await _orderService.CreateMultiPackageOrderAsync(
+                request.BusinessId, 
+                request.UserId, 
+                request.Packages);
 
             if (order == null)
             {
-                return NotFound($"Order with ID {id} not found.");
+                return StatusCode(500, "Failed to create order.");
             }
-            
+
             return Ok(order);
         }
-        
-        // GET: api/order
-        [HttpGet]
-        public async Task<IActionResult> GetAllOrders()
+        catch (Exception ex)
         {
-            var orders = await _orderService.GetAllOrdersAsync();
-            return Ok(orders);
+
+            return BadRequest(ex.Message); 
+        }
+    }
+
+    [HttpPut("{id:guid}/status")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] string statusName)
+    {
+        if (string.IsNullOrWhiteSpace(statusName))
+        {
+            return BadRequest("Status name is required.");
         }
 
-        // DELETE: api/order/5
-        [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "Admin,BusinessManager")]
-        public async Task<IActionResult> DeleteOrder(Guid id)
-        {
-            var deletedOrder = await _orderService.DeleteOrderAsync(id);
-    
-            if (deletedOrder == null)
-            {
-                return NotFound($"Order with ID {id} not found.");
-            }
-    
-            return NoContent();
-        }
+        var success = await _orderService.UpdateOrderStatusByNameAsync(id, statusName);
         
-        [HttpGet("my-business")]
-        [Authorize(Roles = "BusinessManager")]
-        public async Task<IActionResult> GetOrdersForMyBusiness()
+        if (!success)
         {
-            var businessIdClaim = User.FindFirst("BusinessId")?.Value;
-    
-            if (string.IsNullOrEmpty(businessIdClaim) || !Guid.TryParse(businessIdClaim, out Guid businessId))
-            {
-                return Forbid("You are not assigned to a business.");
-            }
-
-            // You will need to add this method to your IOrderService!
-            var orders = await _orderService.GetOrdersByBusinessIdAsync(businessId);
-    
-            return Ok(orders);
+            return NotFound("Order or Status not found, or update failed.");
         }
 
-        // PATCH: api/order/{id}/status
-        [HttpPatch("{id:guid}/status")]
-        [Authorize(Roles = "BusinessManager")]
-        public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] UpdateOrderStatusRequest request)
-        {
-            var businessIdClaim = User.FindFirst("BusinessId")?.Value;
-            if (string.IsNullOrEmpty(businessIdClaim) || !Guid.TryParse(businessIdClaim, out Guid businessId))
-            {
-                return Forbid();
-            }
+        return Ok();
+    }
 
-            var existingOrder = await _orderService.GetOrderByIdAsync(id);
+    [HttpGet("business/{businessId:guid}")]
+    public async Task<IActionResult> GetOrdersByBusiness(Guid businessId)
+    {
+        var orders = await _orderService.GetOrdersByBusinessIdAsync(businessId);
+        return Ok(orders);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetOrderById(Guid id)
+    {
+        var order = await _orderService.GetOrderByIdAsync(id);
+        if (order == null) return NotFound();
+        
+        return Ok(order);
+    }
     
-            if (existingOrder == null)
-            {
-                return NotFound();
-            }
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserOrders(Guid userId)
+    {
+        var orders = await _orderService.GetOrdersByUserIdAsync(userId);
+        return Ok(orders);
+    }
+    
+    [HttpPut("{orderId}/cancel")]
+    public async Task<IActionResult> CancelOrder(Guid orderId, [FromQuery] Guid userId)
+    {
+        var order = await _orderService.GetOrderByIdAsync(orderId);
+    
+        if (order == null)
+            return NotFound("Order not found.");
 
-            if (existingOrder.BusinessID != businessId)
-            {
-                return Forbid("You cannot modify orders belonging to another business.");
-            }
+        if (order.UserID != userId)
+            return Unauthorized("You do not have permission to cancel this order.");
 
-            var success = await _orderService.UpdateOrderStatusAsync(id, request.NewStatusId);
-
-            if (!success) return BadRequest("Failed to update status.");
-
-            return NoContent();
+        if (order.Status == null || !order.Status.Name.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest($"Order cannot be cancelled because it is currently {order.Status?.Name}.");
         }
-        
-        
+
+        var success = await _orderService.UpdateOrderStatusByNameAsync(orderId, "Rejected");
+
+        if (!success)
+            return StatusCode(500, "Failed to cancel the order.");
+
+        return Ok("Order successfully cancelled (Rejected) and inventory restored.");
     }
 }

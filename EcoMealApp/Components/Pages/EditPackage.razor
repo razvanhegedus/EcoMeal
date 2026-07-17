@@ -4,6 +4,7 @@
 
 @using EcoMealApp.Data.Entities
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
@@ -35,7 +36,7 @@ else
 
             <div class="col-md-6 form-group mb-3">
                 <label for="business" class="form-label">Business</label>
-                <InputSelect id="business" @bind-Value="editPackage.BusinessID" class="form-select">
+                <InputSelect id="business" @bind-Value="editPackage.BusinessID" class="form-select" disabled="@IsBusinessManager">
                     <option value="@Guid.Empty">-- Select Business --</option>
                     @foreach (var business in businesses)
                     {
@@ -117,11 +118,42 @@ else
     private List<Business> businesses = new();
     private List<PackageType> packageTypes = new();
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+    
+    private bool IsBusinessManager { get; set; } = false;
+    private Guid? userBusinessId;
+
     protected override async Task OnInitializedAsync()
     {
+        if (AuthState != null)
+        {
+            var authState = await AuthState;
+            var user = authState.User;
+
+            IsBusinessManager = user.IsInRole("BusinessManager");
+            
+            var businessIdClaim = user.FindFirst("BusinessId")?.Value;
+            if (Guid.TryParse(businessIdClaim, out var parsedId))
+            {
+                userBusinessId = parsedId;
+            }
+        }
+
         try
         {
-            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            var allBusinesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            
+            // If they are a manager, only load their specific business into the dropdown list
+            if (IsBusinessManager && userBusinessId.HasValue)
+            {
+                businesses = allBusinesses.Where(b => b.ID == userBusinessId.Value).ToList();
+            }
+            else
+            {
+                businesses = allBusinesses;
+            }
+
             packageTypes = await Http.GetFromJsonAsync<List<PackageType>>("api/packageType") ?? new List<PackageType>();
 
             editPackage = await Http.GetFromJsonAsync<Package>($"api/package/{id}");
@@ -194,7 +226,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo("/packages");
+            NavigateBasedOnRole();
         }
         else
         {
@@ -242,6 +274,18 @@ else
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/packages");
+        NavigateBasedOnRole();
+    }
+
+    private void NavigateBasedOnRole()
+    {
+        if (IsBusinessManager)
+        {
+            Navigation.NavigateTo("/manager/packages");
+        }
+        else
+        {
+            Navigation.NavigateTo("/packages");
+        }
     }
 }

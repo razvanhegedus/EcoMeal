@@ -102,14 +102,11 @@
                     <h4 class="fw-bold text-center mb-1">@selectedUser.Name</h4>
                     <p class="text-muted text-center mb-4">@selectedUser.Email</p>
 
-                    <div class="mb-3 text-start">
-                        <span class="text-muted small fw-bold text-uppercase border-bottom pb-1 d-block mb-2">System ID</span>
-                        <span style="font-family: monospace;">@selectedUser.ID</span>
-                    </div>
+                    
 
                     <div class="text-start">
-                        <span class="text-muted small fw-bold text-uppercase border-bottom pb-1 d-block mb-2">Role ID</span>
-                        <span style="font-family: monospace;">@selectedUser.RoleId</span>
+                        <span class="text-muted small fw-bold text-uppercase border-bottom pb-1 d-block mb-2">Role </span>
+                        <span style="font-family: monospace;">@selectedUser.Role?.Name</span>
                     </div>
                 </div>
                 

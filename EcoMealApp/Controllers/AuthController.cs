@@ -24,12 +24,28 @@ public class AuthController : ControllerBase
 
         if (success)
         {
-            return LocalRedirect(returnUrl ?? "/");
+            // Fetch the user to check their role
+            var user = await _authService.ValidateUserCredentialsAsync(request.Email, request.Password);
+
+            // If a specific return URL was requested (other than the root), honor it
+            if (!string.IsNullOrEmpty(returnUrl) && returnUrl != "/")
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            // Redirect based on role
+            if (user?.Role?.Name == "BusinessManager")
+            {
+                return LocalRedirect("/manager/dashboard");
+            }
+
+            // Default redirect for customers/guests
+            return LocalRedirect("/");
         }
 
-        // FIX: Redirect to /login (not /account/login) and capitalize 'Error'
         return LocalRedirect($"/login?Error=Invalid email or password&ReturnUrl={returnUrl}");
     }
+    
 
     // POST: api/auth/register
     [HttpPost("register")]

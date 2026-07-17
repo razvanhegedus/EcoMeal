@@ -4,6 +4,7 @@
 
 @using EcoMealApp.Data.Entities
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
@@ -29,7 +30,7 @@
 
         <div class="col-md-6 form-group mb-3">
             <label for="business" class="form-label">Business</label>
-            <InputSelect id="business" @bind-Value="newPackage.BusinessID" class="form-select">
+            <InputSelect id="business" @bind-Value="newPackage.BusinessID" class="form-select" disabled="@IsBusinessManager">
                 <option value="@Guid.Empty">-- Select Business --</option>
                 @foreach (var business in businesses)
                 {
@@ -108,11 +109,42 @@
     private List<PackageType> packageTypes = new();
     private string? errorMessage;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+    
+    private bool IsBusinessManager { get; set; } = false;
+    private Guid? userBusinessId;
+
     protected override async Task OnInitializedAsync()
     {
+        if (AuthState != null)
+        {
+            var authState = await AuthState;
+            var user = authState.User;
+
+            IsBusinessManager = user.IsInRole("BusinessManager");
+            
+            var businessIdClaim = user.FindFirst("BusinessId")?.Value;
+            if (Guid.TryParse(businessIdClaim, out var parsedId))
+            {
+                userBusinessId = parsedId;
+            }
+        }
+
         try
         {
-            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            var allBusinesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
+            
+            if (IsBusinessManager && userBusinessId.HasValue)
+            {
+                businesses = allBusinesses.Where(b => b.ID == userBusinessId.Value).ToList();
+                newPackage.BusinessID = userBusinessId.Value; // Automatically select it in the form
+            }
+            else
+            {
+                businesses = allBusinesses;
+            }
+
             packageTypes = await Http.GetFromJsonAsync<List<PackageType>>("api/packageType") ?? new List<PackageType>();
         }
         catch (Exception ex)
@@ -177,7 +209,7 @@
 
         if (response.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo("/packages");
+            NavigateBasedOnRole();
         }
         else
         {
@@ -225,6 +257,18 @@
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/packages");
+        NavigateBasedOnRole();
+    }
+
+    private void NavigateBasedOnRole()
+    {
+        if (IsBusinessManager)
+        {
+            Navigation.NavigateTo("/manager/packages");
+        }
+        else
+        {
+            Navigation.NavigateTo("/packages");
+        }
     }
 }

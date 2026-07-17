@@ -36,6 +36,14 @@ else
                 </button>
             </div>
         </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Order Failed:</strong> @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null" aria-label="Close"></button>
+            </div>
+        }
             
         <div class="row">
             <div class="col-lg-8 mb-4">
@@ -87,7 +95,7 @@ else
                                                         @onclick="() => IncrementQuantity(package.ID)">+</button>
                                             </div>
 
-                                            <button class="btn btn-primary btn-sm" @onclick="() => AddToOrder(package)">
+                                            <button class="btn btn-primary btn-sm" @onclick="() => AddToOrder(package)" disabled="@(GetRemainingStock(package.ID) <= 0)">
                                                 <i class="bi bi-cart-plus me-1"></i> Add
                                             </button>
                                         </div>
@@ -186,6 +194,7 @@ else
     private Business? selectedBusiness; 
     private bool isLoadingPackages;
     private bool isSubmitting;
+    private string? errorMessage; // Added to handle out-of-stock API responses
 
     private List<Package>? modalPackages;
     
@@ -213,6 +222,7 @@ else
     private async Task ShowDetails(Business business)
     {
         isLoadingPackages = true;
+        errorMessage = null;
         modalPackages = null; 
         packageQuantities.Clear(); 
         runningCart.Clear();
@@ -299,6 +309,7 @@ else
         }
         
         packageQuantities[package.ID] = 1;
+        errorMessage = null; // Clear previous errors if the user interacts again
     }
 
     private void RemoveFromCart(Guid packageId)
@@ -312,6 +323,7 @@ else
     private void CancelOrder()
     {
         runningCart.Clear();
+        errorMessage = null;
 
         if (modalPackages != null)
         {
@@ -343,6 +355,7 @@ else
         if (!runningCart.Any()) return;
 
         isSubmitting = true;
+        errorMessage = null;
 
         try
         {
@@ -351,7 +364,7 @@ else
 
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid currentUserId))
             {
-                Console.WriteLine("User is not logged in or invalid.");
+                errorMessage = "User is not logged in or invalid.";
                 return;
             }
 
@@ -373,7 +386,6 @@ else
                 var createdOrder = await response.Content.ReadFromJsonAsync<EcoMealApp.Data.Entities.Order>();
                 if (createdOrder != null && createdOrder.ID != Guid.Empty)
                 {
-                    
                     Navigation.NavigateTo($"/order-success/{createdOrder.ID}");
                 }
                 else
@@ -383,12 +395,16 @@ else
             }
             else
             {
-                var errorText = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Order error: {response.StatusCode} - {errorText}");
+                // This captures the exception message from the backend (e.g., "Insufficient stock...")
+                errorMessage = await response.Content.ReadAsStringAsync();
+                
+                // Refresh the packages to get the true current stock from the database
+                await ShowDetails(selectedBusiness); 
             }
         }
         catch (Exception ex)
         {
+            errorMessage = "An unexpected error occurred while placing your order.";
             Console.WriteLine($"Exception finishing order: {ex.Message}");
         }
         finally

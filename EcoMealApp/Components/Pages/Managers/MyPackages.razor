@@ -1,108 +1,105 @@
-﻿@page "/packages"
+@page "/manager/packages"
 @rendermode InteractiveServer
-@attribute [Authorize]
+@attribute [Authorize(Roles = "BusinessManager")] 
 
 @using EcoMealApp.Data.Entities
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<PageTitle>Package Management</PageTitle>
+<PageTitle>My Business Packages</PageTitle>
 
 <div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Packages</h1>
-        
-        @if (IsAdmin)
-        {
-            <button class="btn btn-primary shadow-sm" @onclick="GoToAddPage">
-                <i class="bi bi-plus-lg me-2"></i> Add New Package
-            </button>
-        }
-    </div>
-
-    @if (isLoading)
+    @if (!userBusinessId.HasValue && !isLoading)
     {
-        <div class="d-flex justify-content-center my-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+        <div class="alert alert-danger shadow-sm border-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Error:</strong> Your account is not linked to a valid Business Profile. Please contact administration.
         </div>
     }
     else
     {
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Package Name</th>
-                        <th style="width: 60px;">Image</th>
-                        <th>Business</th>
-                        <th>Pickup Window</th>
-                        <th>Price</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var p in packages)
-                    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>My Packages</h1>
+            
+            <button class="btn btn-primary shadow-sm" @onclick="GoToAddPage">
+                <i class="bi bi-plus-lg me-2"></i> Add New Package
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="d-flex justify-content-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-light">
                         <tr>
-                            <td class="fw-bold">@p.Name</td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(p.ImageURL))
-                                {
-                                    <img src="@p.ImageURL" alt="img" class="rounded shadow-sm" style="width: 35px; height: 35px; object-fit: cover;"/>
-                                }
-                                else
-                                {
-                                    <div class="rounded bg-light text-secondary d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
-                                        <i class="bi bi-image" style="font-size: 1rem;"></i>
-                                    </div>
-                                }
-                            </td>
-                            <td class="text-muted">
-                                @(businesses.FirstOrDefault(b => b.ID == p.BusinessID)?.Name ?? "Unknown")
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border">
-                                    <i class="bi bi-clock me-1"></i> @p.PickupStart.ToString("HH:mm") - @p.PickupEnd.ToString("HH:mm")
-                                </span>
-                            </td>
-                            <td class="fw-bold text-success">$@p.Price.ToString("0.00")</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-info me-2" @onclick="() => OpenViewModal(p)">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                
-                                <button class="btn btn-sm btn-success me-2" @onclick="() => GoToOrderPage(p.BusinessID)">
-                                    <i class="bi bi-cart-plus"></i> Order
-                                </button>
-                                @if (IsAdmin)
-                                {
+                            <th>Package Name</th>
+                            <th style="width: 60px;">Image</th>
+                            <th>Pickup Window</th>
+                            <th>Price</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var p in packages)
+                        {
+                            <tr>
+                                <td class="fw-bold">@p.Name</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(p.ImageURL))
+                                    {
+                                        <img src="@p.ImageURL" alt="img" class="rounded shadow-sm" style="width: 35px; height: 35px; object-fit: cover;"/>
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded bg-light text-secondary d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                                            <i class="bi bi-image" style="font-size: 1rem;"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-clock me-1"></i> @p.PickupStart.ToString("HH:mm") - @p.PickupEnd.ToString("HH:mm")
+                                    </span>
+                                </td>
+                                <td class="fw-bold text-success">$@p.Price.ToString("0.00")</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-info me-2" @onclick="() => OpenViewModal(p)">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    
                                     <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => GoToEditPage(p.ID)">
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
+                                    
                                     <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeletePopup(p)">
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
-                                }
-                            </td>
-                        </tr>
-                    }
-                    @if (!packages.Any())
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No packages found.</td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                        }
+                        @if (!packages.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">You haven't added any packages yet.</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-        
-        
+        }
     }
 </div>
 
@@ -131,9 +128,6 @@
 
                 <div class="modal-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-primary fs-6">
-                            <i class="bi bi-shop me-1"></i> @(businesses.FirstOrDefault(b => b.ID == selectedPackage.BusinessID)?.Name ?? "Unknown")
-                        </span>
                         <h4 class="text-success fw-bold mb-0">$@selectedPackage.Price.ToString("0.00")</h4>
                     </div>
                     
@@ -174,18 +168,16 @@
 
 @code {
     private List<Package> packages = new();
-    private List<Business> businesses = new();
+    private Guid? userBusinessId;
+    
     private Package? packageToDelete;
     private bool showDeletePopup = false;
-    
     private bool isLoading = true;
-    
     private bool isViewModalOpen = false;
     private Package? selectedPackage;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthState { get; set; }
-    private bool IsAdmin { get; set; } = false;
     
     protected override async Task OnInitializedAsync()
     {
@@ -194,21 +186,31 @@
             var authState = await AuthState;
             var user = authState.User;
 
-            IsAdmin = user.IsInRole("Admin");
+            // Extract the BusinessId claim created in your AuthService
+            var businessIdClaim = user.FindFirst("BusinessId")?.Value;
+            
+            if (Guid.TryParse(businessIdClaim, out var parsedId))
+            {
+                userBusinessId = parsedId;
+            }
         }
-        try
+
+        if (userBusinessId.HasValue)
         {
-            businesses = await Http.GetFromJsonAsync<List<Business>>("api/business") ?? new List<Business>();
-            packages = await Http.GetFromJsonAsync<List<Package>>("api/package") ?? new List<Package>();
+            try
+            {
+                // Note: It is safer/more efficient to filter this on the API side (e.g., api/package/business/{id}) 
+                // but this client-side filter handles it using your existing endpoint.
+                var allPackages = await Http.GetFromJsonAsync<List<Package>>("api/package") ?? new List<Package>();
+                packages = allPackages.Where(p => p.BusinessID == userBusinessId.Value).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading data: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading data: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        
+        isLoading = false;
     }
 
     private void OpenViewModal(Package pkg)
@@ -225,7 +227,8 @@
 
     private void GoToAddPage()
     {
-        NavigationManager.NavigateTo("/packages/create");
+        // Add a query string or state if your create page needs to know the BusinessId
+        NavigationManager.NavigateTo("/packages/create"); 
     }
 
     private void GoToEditPage(Guid id)
@@ -239,11 +242,6 @@
         showDeletePopup = true;
     }
     
-    private void GoToOrderPage(Guid businessId)
-    {
-        NavigationManager.NavigateTo($"/order/{businessId}");
-    }
-
     private void CancelDelete()
     {
         packageToDelete = null;

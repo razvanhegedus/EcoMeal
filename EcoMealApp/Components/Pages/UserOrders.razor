@@ -1,23 +1,24 @@
-@page "/manager/orders"
+@page "/my-orders"
 @rendermode InteractiveServer
-@attribute [Authorize(Roles = "BusinessManager")]
+@attribute [Authorize]
 
 @using EcoMealApp.Data.Entities
 @using EcoMealApp.Services
 @using EcoMealApp.Constants
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
 @inject IOrderService OrderService
 @inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Manage Orders</PageTitle>
+<PageTitle>My Orders</PageTitle>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="fw-bold mb-0">Orders</h1>
-            <p class="text-muted">Manage status changes and monitor incoming requests.</p>
+            <h1 class="fw-bold mb-0">My Orders</h1>
+            <p class="text-muted">Track your meal requests and their current status.</p>
         </div>
     </div>
 
@@ -45,7 +46,7 @@
                     <tr>
                         <th style="width: 60px;" class="text-center">Details</th>
                         <th>Order Number</th>
-                        <th>Customer </th>
+                        <th>Restaurant / Store</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -60,7 +61,7 @@
                                 </button>
                             </td>
                             <td class="fw-bold">Order #@o.OrderNumber</td>
-                            <td class="text-muted small font-monospace">@o.User?.Name</td>
+                            <td>@(o.Business?.Name ?? "Unknown Business")</td>
                             
                             <td>
                                 @if (o.Status?.Name == StatusConstants.Pending)
@@ -79,37 +80,22 @@
                                 {
                                     <span class="badge bg-success border">Completed</span>
                                 }
-                                else if (o.Status?.Name == StatusConstants.Rejected)
+                                else if (o.Status?.Name == StatusConstants.Rejected || o.Status?.Name == "Cancelled")
                                 {
-                                    <span class="badge bg-danger border">Rejected</span>
+                                    <span class="badge bg-danger border">Cancelled / Rejected</span>
                                 }
                             </td>
                             
                             <td class="text-end">
                                 @if (o.Status?.Name == StatusConstants.Pending)
                                 {
-                                    <button class="btn btn-sm btn-outline-success me-2" type="button" @onclick="() => UpdateStatus(o.ID, StatusConstants.Accepted)">
-                                        <i class="bi bi-check-lg"></i> Accept
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => OpenRejectPopup(o)">
-                                        <i class="bi bi-x-lg"></i> Reject
+                                    <button class="btn btn-sm btn-outline-danger" type="button" @onclick="() => OpenCancelPopup(o)">
+                                        <i class="bi bi-x-circle"></i> Cancel Order
                                     </button>
                                 }
-                                else if (o.Status?.Name == StatusConstants.Accepted)
+                                else
                                 {
-                                    <button class="btn btn-sm btn-primary" type="button" @onclick="() => UpdateStatus(o.ID, StatusConstants.ReadyForPickup)">
-                                        <i class="bi bi-box-seam"></i> Mark Ready
-                                    </button>
-                                }
-                                else if (o.Status?.Name == StatusConstants.ReadyForPickup)
-                                {
-                                    <button class="btn btn-sm btn-success" type="button" @onclick="() => UpdateStatus(o.ID, StatusConstants.Completed)">
-                                        <i class="bi bi-check2-all"></i> Complete
-                                    </button>
-                                }
-                                else if (o.Status?.Name == StatusConstants.Completed || o.Status?.Name == StatusConstants.Rejected)
-                                {
-                                    <span class="text-muted small">No action required</span>
+                                    <span class="text-muted small">No action available</span>
                                 }
                             </td>
                         </tr>
@@ -162,7 +148,7 @@
                     @if (!orders.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No orders found for your business.</td>
+                            <td colspan="5" class="text-center py-4 text-muted">You haven't placed any orders yet.</td>
                         </tr>
                     }
                     </tbody>
@@ -172,23 +158,23 @@
     }
 </div>
 
-@if (showRejectPopup && orderToReject != null)
+@if (showCancelPopup && orderToCancel != null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Reject Order</h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CancelReject" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Cancel Order</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseCancelPopup" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to reject <strong>Order #@orderToReject.OrderNumber</strong>?</p>
-                    <p class="text-muted small mb-0">This action will automatically return the packages' quantities back to the inventory.</p>
+                    <p>Are you sure you want to cancel <strong>Order #@orderToCancel.OrderNumber</strong> from <strong>@orderToCancel.Business?.Name</strong>?</p>
+                    <p class="text-muted small mb-0">This cannot be undone.</p>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary" @onclick="CancelReject">Cancel</button>
-                    <button type="button" class="btn btn-danger" @onclick="ConfirmReject">
-                        <i class="bi bi-x-circle me-1"></i> Confirm Rejection
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseCancelPopup">Keep Order</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmCancel">
+                        <i class="bi bi-x-circle me-1"></i> Yes, Cancel Order
                     </button>
                 </div>
             </div>
@@ -198,12 +184,12 @@
 
 @code {
     private List<Order> orders = new();
-    private Order? orderToReject;
-    private Guid? expandedOrderId; // Tracks which row is currently open
-    private bool showRejectPopup = false;
+    private Order? orderToCancel;
+    private Guid? expandedOrderId; 
+    private bool showCancelPopup = false;
     private bool isLoading = true;
     private string? errorMessage;
-    private Guid currentBusinessId;
+    private Guid currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -217,20 +203,23 @@
             isLoading = true;
             errorMessage = null;
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var businessIdClaim = authState.User.FindFirst("BusinessId")?.Value;
+            
+            // Getting the user ID from the claims (adjust standard ClaimTypes if you use a custom claim)
+            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                           ?? authState.User.FindFirst("UserId")?.Value;
 
-            if (!string.IsNullOrEmpty(businessIdClaim) && Guid.TryParse(businessIdClaim, out currentBusinessId))
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out currentUserId))
             {
-                orders = await OrderService.GetOrdersByBusinessIdAsync(currentBusinessId);
+                orders = await OrderService.GetOrdersByUserIdAsync(currentUserId);
             }
             else
             {
-                errorMessage = "Your account is not linked to any active business profile.";
+                errorMessage = "Could not identify the logged-in user.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = "Failed to load orders list.";
+            errorMessage = "Failed to load your orders.";
             Console.WriteLine($"Error: {ex.Message}");
         }
         finally
@@ -239,64 +228,66 @@
         }
     }
 
-    // Toggle the accordion row
     private void ToggleDetails(Guid orderId)
     {
         if (expandedOrderId == orderId)
         {
-            expandedOrderId = null; // Close if already open
+            expandedOrderId = null; 
         }
         else
         {
-            expandedOrderId = orderId; // Open new row
+            expandedOrderId = orderId; 
         }
     }
 
-    private async Task UpdateStatus(Guid orderId, string newStatusName)
+    private void OpenCancelPopup(Order order)
     {
+        orderToCancel = order;
+        showCancelPopup = true;
+    }
+
+    private void CloseCancelPopup()
+    {
+        orderToCancel = null;
+        showCancelPopup = false;
+    }
+
+    private async Task ConfirmCancel()
+    {
+        if (orderToCancel == null) return;
+        
         try
         {
             errorMessage = null;
-            var success = await OrderService.UpdateOrderStatusByNameAsync(orderId, newStatusName);
+            
+            // As discussed, setting the status to "Rejected" (or "Cancelled") triggers your inventory restoration logic.
+            // Using StatusConstants.Rejected or a literal string based on your exact status name.
+            string targetStatus = "Rejected"; // Or StatusConstants.Rejected if it exists in your constants
+            
+            var success = await OrderService.UpdateOrderStatusByNameAsync(orderToCancel.ID, targetStatus);
             
             if (success)
             {
-                var targetOrder = orders.FirstOrDefault(o => o.ID == orderId);
+                // Update local UI state
+                var targetOrder = orders.FirstOrDefault(o => o.ID == orderToCancel.ID);
                 if (targetOrder != null)
                 {
-                    targetOrder.Status = new Status { Name = newStatusName };
+                    targetOrder.Status = new Status { Name = targetStatus };
                     StateHasChanged(); 
                 }
             }
             else
             {
-                 errorMessage = $"Failed to update status to '{newStatusName}'. Please check database configurations.";
+                 errorMessage = "Failed to cancel the order. It may have already been processed.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error occurred during status transition: {ex.Message}";
-            Console.WriteLine($"Error updating status: {ex.Message}");
+            errorMessage = $"Error occurred while canceling: {ex.Message}";
         }
-    }
-
-    private void OpenRejectPopup(Order order)
-    {
-        orderToReject = order;
-        showRejectPopup = true;
-    }
-
-    private void CancelReject()
-    {
-        orderToReject = null;
-        showRejectPopup = false;
-    }
-
-    private async Task ConfirmReject()
-    {
-        if (orderToReject == null) return;
-        
-        await UpdateStatus(orderToReject.ID, StatusConstants.Rejected);
-        CancelReject();
+        finally
+        {
+            CloseCancelPopup();
+        }
     }
 }

@@ -13,6 +13,6 @@ public interface IOrderService
     Task<List<Order>> GetOrdersByBusinessIdAsync(Guid businessId);
     Task<bool> UpdateOrderStatusAsync(Guid orderId, Guid newStatusId);
     Task<bool> UpdateOrderStatusByNameAsync(Guid orderId, string statusName);
-
+    Task<List<Order>> GetOrdersByUserIdAsync(Guid userId);
 
 }
